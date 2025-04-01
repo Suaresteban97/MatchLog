@@ -1,0 +1,49 @@
+# Composer
+/vendor
+/composer.lock  # 🚨 (Si tu equipo lo requiere en Git, quítalo)
+
+# Node.js
+/node_modules
+/npm-debug.log
+/yarn-error.log
+/pnpm-debug.log
+
+# Laravel Specific
+/.env*
+/.env.*   # Ignora todas las variantes del .env
+/.phpunit.result.cache
+/.phpactor.json
+/.phpunit.cache
+/auth.json
+/storage/*.key
+/storage/oauth-private.key
+/storage/oauth-public.key
+/storage/debugbar
+/storage/framework/*
+!storage/framework/.gitignore  # Mantiene el directorio vacío en Git
+/storage/logs/*
+!storage/logs/.gitignore  # Mantiene el directorio vacío en Git
+/bootstrap/cache/*
+!bootstrap/cache/.gitignore  # Mantiene el directorio vacío en Git
+
+# Frontend
+/public/build
+/public/hot
+/public/storage
+
+# IDEs & Editors
+/.idea
+/.vscode
+/.fleet
+/.zed
+/.nova
+
+# Homestead & Valet
+/Homestead.json
+/Homestead.yaml
+/.valet
+
+# Misc
+/.DS_Store
+/thumbs.db
+/desktop.ini
