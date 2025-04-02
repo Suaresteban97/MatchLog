@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 //Models
-use App\Models\GoogleToken;
+use App\Models\PlatformsToken;
 use App\Models\User;
 
 //Packages
@@ -13,8 +13,7 @@ use GuzzleHttp\Client;
 
 class GoogleAuthController extends Controller
 {
-    public function storeGoogleToken(Request $request)
-    {
+    public function storeGoogleToken(Request $request) {
         $code = $request->input('code');
 
         if (!$code) {
@@ -24,7 +23,7 @@ class GoogleAuthController extends Controller
         $client = new Client();
 
         try {
-            // Obtener tokens desde Google
+
             $response = $client->post('https://oauth2.googleapis.com/token', [
                 'form_params' => [
                     'code'          => $code,
@@ -41,7 +40,6 @@ class GoogleAuthController extends Controller
                 return GeneralController::defaultResponse("No se recibió el access_token de Google.", 400);
             }
 
-            // Obtener datos del usuario desde Google
             $userResponse = $client->get('https://www.googleapis.com/oauth2/v3/userinfo', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $tokens['access_token'],
@@ -54,35 +52,63 @@ class GoogleAuthController extends Controller
                 return GeneralController::defaultResponse("No se pudo obtener la información del usuario.", 400);
             }
 
-            // Buscar usuario en la base de datos o crearlo
-            $user = User::firstOrCreate(
-                ['email' => $googleUser['email']],
-                [
-                    'name' => $googleUser['name'] ?? 'Usuario sin nombre',
-                ]
-            );
+            $user = User::with(["googleToken"])->where("email", $googleUser['email'])->first();
 
-            // Si el usuario no tiene un api_token, generarlo
-            if (!$user->api_token) {
-                do {
-                    $token = bin2hex(random_bytes(40));
-                } while (User::where('api_token', $token)->exists());
+            if (!isset($user)) {
+                $user = new User();
+                $user->name = $googleUser['name'];
+                $user->email = $googleUser['email'];
+                $user->password = Hash::make(Str::random(16));
 
-                $user->api_token = $token;
+                $plainToken = Str::random(80);
+                $hashedToken = hash_hmac('sha256', $plainToken, env('APP_KEY'));
+
+                $user->api_token = $hashedToken;
+                $user->token_expires_at = Carbon::now()->addDays(7);
                 $user->save();
+
+                if (!$user->id) {
+                    throw new \Exception("No se pudo crear el usuario");
+                }
+
+                $userStatus = new UsersStatus(); 
+                $userStatus->user_id = $user->id;
+                $userStatus->status_id = 1;
+                $userStatus->save();
+
+                $userInfo = new InfoUser();
+                $userInfo->name = $googleUser['given_name']; 
+                $userInfo->last_name = $googleUser['family_name'];
+                $userInfo->user_id = $user->id;
+                $userInfo->photo = $googleUser['picture'] ?? ""; 
+                $userInfo->email_verified_at = Carbon::now(); 
+                $userInfo->save();
+
+                $newPlatformToken = new PlatformsToken();
+                $newPlatformToken->user_id = $user->id;
+                $newPlatformToken->provider = "google";
+                $newPlatformToken->access_token = $tokens['access_token'];
+                $newPlatformToken->refresh_token = $tokens['refresh_token'];
+                $newPlatformToken->save();
+
+                return response()->json([
+                    'user' => $user->singleTransformer(),
+                    'token' => $user->api_token,
+                    'token_type' => 'Bearer',
+                    'expires_at' => $user->token_expires_at
+                ], 201);
+
+            } else {
+                
+                $this->refreshAccessToken($user["id"]);
+
+                return response()->json([
+                    'user' => $user->singleTransformer(),
+                    'token' => $user->api_token,
+                    'token_type' => 'Bearer',
+                    'expires_at' => $user->token_expires_at
+                ], 201);
             }
-
-            // Guardar o actualizar tokens de Google
-            GoogleToken::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'access_token'  => $tokens['access_token'],
-                    'refresh_token' => $tokens['refresh_token'] ?? null,
-                    'expires_at'    => now()->addSeconds($tokens['expires_in']),
-                ]
-            );
-
-            return GeneralController::defaultResponse("Usuario creado correctamente", 201);
 
         } catch (\Exception $e) {
             return GeneralController::defaultResponse("No se almacenó el Token de Google", 400);
@@ -91,10 +117,9 @@ class GoogleAuthController extends Controller
 
 
     public function checkAccessToken($profile) {
-        $googleProfile = GoogleToken::where("user_id", $profile)->first();
+        $googleProfile = PlatformsToken::where("user_id", $profile)->first();
     
         if (isset($googleProfile)) {
-
             $expiresAt = Carbon::createFromFormat('Y-m-d H:i:s', $googleProfile->token_expires_at, 'UTC')  
             ->setTimezone('America/Bogota');
 
@@ -112,7 +137,7 @@ class GoogleAuthController extends Controller
 
     public function refreshAccessToken($profile) {
 
-        $googleProfile = GoogleToken::where("user_id", $profile)->first();
+        $googleProfile = PlatformsToken::where("user_id", $profile)->first();
 
         if (!isset($googleProfile) && !isset($googleProfile["refresh_token"])) {
             return null;
@@ -160,7 +185,7 @@ class GoogleAuthController extends Controller
 
     public function revokeAccess(Request $request){
 
-        $googleProfile = GoogleToken::where("user_id", $request->user()->id)->first();
+        $googleProfile = PlatformsToken::where("user_id", $request->user()->id)->first();
 
         if (!isset($googleProfile) && !isset($googleProfile["google_refresh_token"])) {
             return GeneralController::defaultResponse("Ya no está vinculado este usuario", 400);

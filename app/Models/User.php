@@ -53,7 +53,7 @@ class User extends Authenticatable
     }
 
     public function googleToken() {
-        return $this->belongsToOne(GoogleToken::class, 'user_id');
+        return $this->belongsToOne(GoogleToken::class, 'user_id')->where("provider", "google");
     }
 
     public function userInfo() {

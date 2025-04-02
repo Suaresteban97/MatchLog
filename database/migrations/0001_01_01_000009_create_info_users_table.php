@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer("age")->nullable();
             $table->string("genre", 100)->nullable();
             $table->string("nickname", 100)->nullable();
+            $table->string("photo", 100)->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
