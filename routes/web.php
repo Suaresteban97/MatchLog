@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\Frontend\LoginController;
+
+/**
+ * Register & Login Views
+ */
+Route::get('/login', [LoginController::class, 'index']);
