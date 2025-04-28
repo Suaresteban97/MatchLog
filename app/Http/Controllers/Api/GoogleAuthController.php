@@ -77,7 +77,7 @@ class GoogleAuthController extends Controller
                 $userStatus->save();
 
                 $userInfo = new InfoUser();
-                $userInfo->name = $googleUser['given_name']; 
+                $userInfo->first_name = $googleUser['given_name']; 
                 $userInfo->last_name = $googleUser['family_name'];
                 $userInfo->user_id = $user->id;
                 $userInfo->photo = $googleUser['picture'] ?? ""; 

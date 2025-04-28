@@ -48,9 +48,9 @@ class AuthController extends Controller
             $userStatus->save();
     
             $userInfo = new InfoUser();
-            $userInfo->name = $request->name;
-            $userInfo->last_name = $request->last_name;
-            $userInfo->nickname = $request->nickname;
+            $userInfo->first_name = $request->name ?? "";
+            $userInfo->last_name = $request->last_name ?? "";
+            $userInfo->nickname = $request->nickname ?? "";
             $userInfo->user_id = $user->id;
     
             if ($request->age) {

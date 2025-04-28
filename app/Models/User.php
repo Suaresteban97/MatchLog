@@ -48,8 +48,13 @@ class User extends Authenticatable
 
     //Relations
     
-    public function devices() {
-        return $this->belongsToMany(Device::class, 'user_devices')->withPivot('specs');
+    public function userDevices() {
+        return $this->hasMany(UserDevice::class);
+    }
+
+    public function devices()
+    {
+        return $this->belongsToMany(Device::class, 'user_devices');
     }
 
     public function googleToken() {
@@ -60,10 +65,12 @@ class User extends Authenticatable
         return $this->belongsToOne(InfoUser::class, 'user_id');
     }
 
-    public function singleTransformer(){
+    public function simpleTransformer(){
         return [
             "code" => $this->id,
             "name" => $this->name,
+            "email" => $this->email
         ];
     }
+
 }

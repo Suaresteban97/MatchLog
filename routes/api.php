@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 //Controllers
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DeviceController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -30,6 +31,10 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      */
     Route::resource('users', UserController::class);
 
+    /**
+     * Devices
+     */
+    Route::post('/add-devices', [DeviceController::class, 'store']);
     
 });
 

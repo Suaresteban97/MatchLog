@@ -6,15 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserDevice extends Model
 {
-    protected $fillable = ['user_id', 'device_id', 'specs'];
-
-    public function user()
+    public function characteristics()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(DeviceCharacteristic::class);
     }
 
     public function device()
     {
         return $this->belongsTo(Device::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }
