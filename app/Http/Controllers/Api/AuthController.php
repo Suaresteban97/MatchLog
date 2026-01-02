@@ -32,9 +32,7 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
     
             $plainToken = Str::random(80);
-            $hashedToken = hash_hmac('sha256', $plainToken, env('APP_KEY'));
-    
-            $user->api_token = $hashedToken;
+            $user->api_token = hash('sha256', $plainToken);
             $user->token_expires_at = Carbon::now()->addDays(7);
             $user->save();
     
@@ -66,7 +64,7 @@ class AuthController extends Controller
     
             return response()->json([
                 'user' => $user->singleTransformer(),
-                'token' => $hashedToken,
+                'token' => $plainToken,
                 'token_type' => 'Bearer',
                 'expires_at' => $user->token_expires_at
             ], 201);
@@ -94,10 +92,15 @@ class AuthController extends Controller
         $hashedToken = hash_hmac('sha256', $plainToken, env('APP_KEY'));
         
         // Generar un nuevo token
-        $user->api_token = Str::random(60);
+        $plainToken = Str::random(80);
+        $user->api_token = hash('sha256', $plainToken);
+        $user->token_expires_at = Carbon::now()->addDays(7);
         $user->save();
 
-        return response()->json(['token' => $user->api_token], 200);
+        return response()->json([
+            'token' => $plainToken,
+            'expires_at' => $user->token_expires_at
+        ], 200);
     }
 
     // Cerrar sesión

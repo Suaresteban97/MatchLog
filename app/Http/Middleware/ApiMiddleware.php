@@ -23,7 +23,7 @@ class ApiMiddleware
             return response()->json(["code" => 403, "message" => "You should send Authorization Header"], 403);
         }
 
-        $user = User::where("api_token", $token)
+        $user = User::where("api_token", hash('sha256', $token))
             ->where("token_expires_at", ">", now()) // Verifica que no haya expirado
             ->first();
 

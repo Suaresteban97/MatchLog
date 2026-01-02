@@ -39,4 +39,4 @@ Route::middleware([ApiMiddleware::class])->group(function () {
 });
 
 //Google Auth
-Route::post('/store-google-token', [AuthController::class, 'storeGoogleToken']);
+Route::post('/store-google-token', [App\Http\Controllers\Api\GoogleAuthController::class, 'storeGoogleToken']);

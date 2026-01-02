@@ -61,9 +61,7 @@ class GoogleAuthController extends Controller
                 $user->password = Hash::make(Str::random(16));
 
                 $plainToken = Str::random(80);
-                $hashedToken = hash_hmac('sha256', $plainToken, env('APP_KEY'));
-
-                $user->api_token = $hashedToken;
+                $user->api_token = hash('sha256', $plainToken);
                 $user->token_expires_at = Carbon::now()->addDays(7);
                 $user->save();
 
@@ -93,7 +91,7 @@ class GoogleAuthController extends Controller
 
                 return response()->json([
                     'user' => $user->singleTransformer(),
-                    'token' => $user->api_token,
+                    'token' => $plainToken,
                     'token_type' => 'Bearer',
                     'expires_at' => $user->token_expires_at
                 ], 201);
@@ -101,10 +99,16 @@ class GoogleAuthController extends Controller
             } else {
                 
                 $this->refreshAccessToken($user["id"]);
+                
+                // Refresh API Token
+                $plainToken = Str::random(80);
+                $user->api_token = hash('sha256', $plainToken);
+                $user->token_expires_at = Carbon::now()->addDays(7);
+                $user->save();
 
                 return response()->json([
                     'user' => $user->singleTransformer(),
-                    'token' => $user->api_token,
+                    'token' => $plainToken,
                     'token_type' => 'Bearer',
                     'expires_at' => $user->token_expires_at
                 ], 201);
