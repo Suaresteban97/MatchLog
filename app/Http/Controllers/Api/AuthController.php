@@ -121,20 +121,16 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPasswordRequest $request) {
 
-        // Verificar que el usuario existe
         $user = User::where('email', $request->email)->first();
         
         if (!$user) {
-            // Por seguridad, no revelamos si el email existe o no
             return response()->json([
                 'message' => 'Si el correo existe, hemos enviado un token de recuperación.'
             ], 200);
         }
 
-        // Generar un token único
         $token = Str::random(60);
 
-        // Almacenar el token en la tabla `password_reset_tokens`
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $request->email],
             ['token' => $token, 'created_at' => Carbon::now()]
@@ -157,17 +153,14 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        // Validar que el token existe y coincide
         if (!$passwordReset || $request->token !== $passwordReset->token) {
             return response()->json([
                 'message' => 'El token es inválido o ha expirado'
             ], 400);
         }
 
-        // Validar que el token no haya expirado (60 minutos)
         $tokenAge = Carbon::parse($passwordReset->created_at)->diffInMinutes(Carbon::now());
         if ($tokenAge > 60) {
-            // Eliminar token expirado
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
             
             return response()->json([
@@ -184,16 +177,13 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // Actualizar la contraseña del usuario
         $user->password = Hash::make($request->password);
         
-        // Invalidar el token actual por seguridad
         $user->api_token = null;
         $user->token_expires_at = null;
         
         $user->save();
 
-        // Eliminar el token usado
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return response()->json([

@@ -60,7 +60,6 @@ class GoogleAuthController extends Controller
             $user = User::with(["googleToken"])->where("email", $googleUser['email'])->first();
 
             if (!isset($user)) {
-                // Iniciar transacción para asegurar atomicidad
                 DB::beginTransaction();
                 
                 try {
@@ -215,7 +214,6 @@ class GoogleAuthController extends Controller
 
         $googleProfile = PlatformsToken::where("user_id", $request->user()->id)->first();
 
-        // Corregido: usar || en lugar de &&
         if (!isset($googleProfile) || !isset($googleProfile->refresh_token)) {
             return GeneralController::defaultResponse("Ya no está vinculado este usuario", 400);
         }
@@ -224,7 +222,6 @@ class GoogleAuthController extends Controller
     
         try {
             $response = $client->post('https://oauth2.googleapis.com/revoke', [
-                // Corregido: usar access_token en lugar de google_token
                 'form_params' => ['token' => $googleProfile->access_token],
                 'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
             ]);
