@@ -15,6 +15,7 @@ use App\Models\UsersStatus;
 //Request
 use App\Http\Requests\User\RegisterRequest;
 use App\Http\Requests\User\LoginRequest;
+use App\Http\Requests\User\LogoutRequest;
 use App\Http\Requests\User\ForgotPasswordRequest;
 use App\Http\Requests\User\ResetPasswordRequest;
 use Illuminate\Http\Request;
@@ -63,7 +64,7 @@ class AuthController extends Controller
             DB::commit();
     
             return response()->json([
-                'user' => $user->singleTransformer(),
+                'user' => $user->simpleTransformer(),
                 'token' => $plainToken,
                 'token_type' => 'Bearer',
                 'expires_at' => $user->token_expires_at
@@ -104,16 +105,31 @@ class AuthController extends Controller
     }
 
     // Cerrar sesión
-    public function logout(Request $request)
+    public function logout(LogoutRequest $request)
     {
         $user = $request->user();
+        
+        // Invalidar completamente el token
         $user->api_token = null;
+        $user->token_expires_at = null;
         $user->save();
 
-        return response()->json(['message' => 'Sesión cerrada']);
+        return response()->json([
+            'message' => 'Sesión cerrada correctamente'
+        ], 200);
     }
 
     public function forgotPassword(ForgotPasswordRequest $request) {
+
+        // Verificar que el usuario existe
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            // Por seguridad, no revelamos si el email existe o no
+            return response()->json([
+                'message' => 'Si el correo existe, hemos enviado un token de recuperación.'
+            ], 200);
+        }
 
         // Generar un token único
         $token = Str::random(60);
@@ -125,37 +141,64 @@ class AuthController extends Controller
         );
 
         // Enviar correo con el token
-        //ForgotPasswordJob::dispatch($token, $request->email)->onQueue('high');
+        // TODO: Descomentar cuando se implemente el sistema de correos
+        // ForgotPasswordJob::dispatch($token, $request->email)->onQueue('high');
 
         return response()->json([
-            'message' => 'Hemos enviado un token de recuperación a tu correo.'
-        ]);
+            'message' => 'Si el correo existe, hemos enviado un token de recuperación.',
+            // TODO: Eliminar esta línea en producción (solo para desarrollo)
+            'token' => $token
+        ], 200);
     }
 
     public function resetPassword(ResetPasswordRequest $request) {
         // Buscar el token en la base de datos
-
         $passwordReset = DB::table('password_reset_tokens')
-        ->where('email', $request->email)
-        ->first();
+            ->where('email', $request->email)
+            ->first();
 
+        // Validar que el token existe y coincide
         if (!$passwordReset || $request->token !== $passwordReset->token) {
             return response()->json([
                 'message' => 'El token es inválido o ha expirado'
             ], 400);
         }
 
-        // Actualizar la contraseña del usuario
+        // Validar que el token no haya expirado (60 minutos)
+        $tokenAge = Carbon::parse($passwordReset->created_at)->diffInMinutes(Carbon::now());
+        if ($tokenAge > 60) {
+            // Eliminar token expirado
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            
+            return response()->json([
+                'message' => 'El token ha expirado. Solicita uno nuevo.'
+            ], 400);
+        }
+
+        // Buscar el usuario
         $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'Usuario no encontrado'
+            ], 404);
+        }
+
+        // Actualizar la contraseña del usuario
         $user->password = Hash::make($request->password);
+        
+        // Invalidar el token actual por seguridad
+        $user->api_token = null;
+        $user->token_expires_at = null;
+        
         $user->save();
 
         // Eliminar el token usado
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return response()->json([
-            'message' => 'Contraseña actualizada correctamente.'
-        ]);
+            'message' => 'Contraseña actualizada correctamente. Por favor, inicia sesión nuevamente.'
+        ], 200);
     }
 
 }

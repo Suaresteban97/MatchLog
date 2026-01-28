@@ -14,7 +14,7 @@ class AdminMiddleware {
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->header("Admin_Authorization");
+        $token = $request->header("Admin-Authorization");
 
         if (!$token) {
             return response()->json([

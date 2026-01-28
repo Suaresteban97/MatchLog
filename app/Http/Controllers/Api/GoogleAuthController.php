@@ -5,9 +5,14 @@ namespace App\Http\Controllers\Api;
 //Models
 use App\Models\PlatformsToken;
 use App\Models\User;
+use App\Models\UsersStatus;
+use App\Models\InfoUser;
 
 //Packages
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 
@@ -55,46 +60,61 @@ class GoogleAuthController extends Controller
             $user = User::with(["googleToken"])->where("email", $googleUser['email'])->first();
 
             if (!isset($user)) {
-                $user = new User();
-                $user->name = $googleUser['name'];
-                $user->email = $googleUser['email'];
-                $user->password = Hash::make(Str::random(16));
+                // Iniciar transacción para asegurar atomicidad
+                DB::beginTransaction();
+                
+                try {
+                    $user = new User();
+                    $user->name = $googleUser['name'];
+                    $user->email = $googleUser['email'];
+                    $user->password = Hash::make(Str::random(16));
 
-                $plainToken = Str::random(80);
-                $user->api_token = hash('sha256', $plainToken);
-                $user->token_expires_at = Carbon::now()->addDays(7);
-                $user->save();
+                    $plainToken = Str::random(80);
+                    $user->api_token = hash('sha256', $plainToken);
+                    $user->token_expires_at = Carbon::now()->addDays(7);
+                    $user->save();
 
-                if (!$user->id) {
-                    throw new \Exception("No se pudo crear el usuario");
+                    if (!$user->id) {
+                        throw new \Exception("No se pudo crear el usuario");
+                    }
+
+                    $userStatus = new UsersStatus(); 
+                    $userStatus->user_id = $user->id;
+                    $userStatus->status_id = 1;
+                    $userStatus->save();
+
+                    $userInfo = new InfoUser();
+                    $userInfo->first_name = $googleUser['given_name'] ?? ''; 
+                    $userInfo->last_name = $googleUser['family_name'] ?? '';
+                    $userInfo->user_id = $user->id;
+                    $userInfo->photo = $googleUser['picture'] ?? ""; 
+                    $userInfo->email_verified_at = Carbon::now(); 
+                    $userInfo->save();
+
+                    $newPlatformToken = new PlatformsToken();
+                    $newPlatformToken->user_id = $user->id;
+                    $newPlatformToken->provider = "google";
+                    $newPlatformToken->access_token = $tokens['access_token'];
+                    $newPlatformToken->refresh_token = $tokens['refresh_token'] ?? null;
+                    $newPlatformToken->save();
+                    
+                    DB::commit();
+
+                    return response()->json([
+                        'user' => $user->singleTransformer(),
+                        'token' => $plainToken,
+                        'token_type' => 'Bearer',
+                        'expires_at' => $user->token_expires_at
+                    ], 201);
+                    
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    
+                    return response()->json([
+                        'error' => 'Error al crear usuario con Google',
+                        'message' => $e->getMessage()
+                    ], 500);
                 }
-
-                $userStatus = new UsersStatus(); 
-                $userStatus->user_id = $user->id;
-                $userStatus->status_id = 1;
-                $userStatus->save();
-
-                $userInfo = new InfoUser();
-                $userInfo->first_name = $googleUser['given_name']; 
-                $userInfo->last_name = $googleUser['family_name'];
-                $userInfo->user_id = $user->id;
-                $userInfo->photo = $googleUser['picture'] ?? ""; 
-                $userInfo->email_verified_at = Carbon::now(); 
-                $userInfo->save();
-
-                $newPlatformToken = new PlatformsToken();
-                $newPlatformToken->user_id = $user->id;
-                $newPlatformToken->provider = "google";
-                $newPlatformToken->access_token = $tokens['access_token'];
-                $newPlatformToken->refresh_token = $tokens['refresh_token'];
-                $newPlatformToken->save();
-
-                return response()->json([
-                    'user' => $user->singleTransformer(),
-                    'token' => $plainToken,
-                    'token_type' => 'Bearer',
-                    'expires_at' => $user->token_expires_at
-                ], 201);
 
             } else {
                 
@@ -115,7 +135,11 @@ class GoogleAuthController extends Controller
             }
 
         } catch (\Exception $e) {
-            return GeneralController::defaultResponse("No se almacenó el Token de Google", 400);
+            return response()->json([
+                'error' => 'Error en autenticación con Google',
+                'message' => $e->getMessage(),
+                'details' => 'No se pudo procesar la autenticación. Verifica tus credenciales de Google.'
+            ], 500);
         }
     }
 
@@ -191,7 +215,8 @@ class GoogleAuthController extends Controller
 
         $googleProfile = PlatformsToken::where("user_id", $request->user()->id)->first();
 
-        if (!isset($googleProfile) && !isset($googleProfile["google_refresh_token"])) {
+        // Corregido: usar || en lugar de &&
+        if (!isset($googleProfile) || !isset($googleProfile->refresh_token)) {
             return GeneralController::defaultResponse("Ya no está vinculado este usuario", 400);
         }
     
@@ -199,7 +224,8 @@ class GoogleAuthController extends Controller
     
         try {
             $response = $client->post('https://oauth2.googleapis.com/revoke', [
-                'form_params' => ['token' => $googleProfile->google_token],
+                // Corregido: usar access_token en lugar de google_token
+                'form_params' => ['token' => $googleProfile->access_token],
                 'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
             ]);
             
