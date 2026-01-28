@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('devices', function (Blueprint $table) {
+        Schema::create('pc_components', function (Blueprint $table) {
             $table->id();
+            $table->enum('type', ['cpu', 'gpu', 'ram', 'storage']);
             $table->string('name');
+            $table->string('brand')->nullable();
             $table->timestamps();
+            
+            $table->index(['type', 'name']);
         });
     }
 
@@ -23,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('devices');
+        Schema::dropIfExists('pc_components');
     }
 };

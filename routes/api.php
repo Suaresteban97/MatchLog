@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\GoogleAuthController;
 
 //Middlware
@@ -38,7 +39,16 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     /**
      * Devices
      */
-    Route::post('/add-devices', [DeviceController::class, 'store']);
+    Route::get('/devices', [DeviceController::class, 'index']);
+    Route::post('/devices', [DeviceController::class, 'store']);
+    Route::put('/devices/{id}', [DeviceController::class, 'update']);
+    Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
+    
+    /**
+     * User Profile
+     */
+    Route::get('/profile', [UserProfileController::class, 'show']);
+    Route::put('/profile', [UserProfileController::class, 'update']);
     
 });
 

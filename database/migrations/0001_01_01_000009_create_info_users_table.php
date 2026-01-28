@@ -18,7 +18,10 @@ return new class extends Migration
             $table->integer("age")->nullable();
             $table->string("genre", 100)->nullable();
             $table->string("nickname", 100)->nullable();
+            $table->text("bio")->nullable(); // Biografía del usuario
             $table->string("photo", 100)->nullable();
+            $table->boolean("share_email")->default(false); // Privacidad: compartir email
+            $table->boolean("available_for_online")->default(true); // Disponibilidad para juego online
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });

@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_device_id')->constrained()->onDelete('cascade');
             $table->string('key');
-            $table->string('value');
-            $table->timestamps();
+            $table->string('value')->nullable(); 
+            $table->foreignId('pc_component_id')->nullable()->constrained()->onDelete('set null');
+            $table->timestamps();        
+            $table->index(['user_device_id', 'key']);
         });
     }
 

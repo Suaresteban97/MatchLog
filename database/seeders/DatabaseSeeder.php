@@ -15,5 +15,6 @@ class DatabaseSeeder extends Seeder
     {        
         $this->call(UserStatusSeeder::class);
         $this->call(DeviceSeeder::class);
+        $this->call(PcComponentSeeder::class);
     }
 }

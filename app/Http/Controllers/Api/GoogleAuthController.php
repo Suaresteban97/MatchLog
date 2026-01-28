@@ -87,8 +87,10 @@ class GoogleAuthController extends Controller
                     $userInfo->last_name = $googleUser['family_name'] ?? '';
                     $userInfo->user_id = $user->id;
                     $userInfo->photo = $googleUser['picture'] ?? ""; 
-                    $userInfo->email_verified_at = Carbon::now(); 
                     $userInfo->save();
+                    
+                    $user->email_verified_at = Carbon::now();
+                    $user->save();
 
                     $newPlatformToken = new PlatformsToken();
                     $newPlatformToken->user_id = $user->id;

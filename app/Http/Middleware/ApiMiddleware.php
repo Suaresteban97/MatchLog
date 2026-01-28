@@ -18,6 +18,10 @@ class ApiMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->header("Authorization");
+        
+        if ($token && str_starts_with($token, 'Bearer ')) {
+            $token = substr($token, 7);
+        }
 
         if (!$token) {
             return response()->json(["code" => 403, "message" => "You should send Authorization Header"], 403);
