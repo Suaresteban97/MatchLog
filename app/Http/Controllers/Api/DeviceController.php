@@ -26,6 +26,19 @@ class DeviceController extends Controller
     }
 
     /**
+     * Show single device
+     */
+    public function show(Request $request, $id)
+    {
+        $userDevice = UserDevice::where('user_id', $request->user()->id)
+            ->where('id', $id)
+            ->with(['device', 'characteristics.pcComponent'])
+            ->firstOrFail();
+
+        return response()->json(['device' => $userDevice], 200);
+    }
+
+    /**
      * Add a new device to the user
      */
     public function store(AddDeviceRequest $request)

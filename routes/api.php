@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\GoogleAuthController;
 
 //Middlware
@@ -40,9 +41,15 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      * Devices
      */
     Route::get('/devices', [DeviceController::class, 'index']);
+    Route::get('/devices/{id}', [DeviceController::class, 'show']);
     Route::post('/devices', [DeviceController::class, 'store']);
     Route::put('/devices/{id}', [DeviceController::class, 'update']);
     Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
+
+    /**
+     * Catalog
+     */
+    Route::get('/catalog', [CatalogController::class, 'index']);
     
     /**
      * User Profile
