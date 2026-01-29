@@ -13,7 +13,7 @@
 
     @if (isset($scripts) && count($scripts) > 0)
         @foreach ($scripts as $script)
-            <script src="{{ asset('components/login/Login.js') }}"></script>
+            <script type="module" src="{{ asset('components/' . $script . '.js') }}"></script>
         @endforeach
     @endif
 

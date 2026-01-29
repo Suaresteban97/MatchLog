@@ -11,6 +11,10 @@ class LoginController extends Controller
      * Vista de Login
      */
     public function index(Request $request){
+        
+        if (session('usuario')) {
+            return redirect('/dashboard');
+        }
 
         RenderController::header([
             "titulo" => "Login",
@@ -19,7 +23,7 @@ class LoginController extends Controller
             ]
         ]);
 
-        echo view ("components.login", [
+        echo view ("components.login.login", [
 
         ]);
 
