@@ -18,7 +18,7 @@
                 <div class="card bg-dark text-white border-secondary h-100 shadow-sm">
                     <div class="card-body text-center">
                         <div class="mb-3">
-                            <img :src="profile?.photo || 'https://via.placeholder.com/100'"
+                            <img :src="profile?.photo || '/assets/images/default-avatar.png'"
                                 class="rounded-circle border border-primary" width="100" height="100"
                                 style="object-fit: cover;">
                         </div>
