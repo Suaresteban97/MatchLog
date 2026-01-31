@@ -6,20 +6,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Frontend\RenderController;
 
-class DashboardController extends Controller
+class ProfileController extends Controller
 {
-    public function index()
+    /**
+     * Show edit profile form
+     */
+    public function edit()
     {
         RenderController::header([
-            "titulo" => "Social Dashboard",
-            "module" => 0 // Social module
+            "titulo" => "Editar Perfil",
+            "module" => 3 // Profile module code
         ]);
 
-        echo view('components.dashboard.social');
+        echo view('components.profile.form');
 
         RenderController::footer([
             "scripts" => [
-                "social/Social"
+                "profile/ProfileForm"
             ]
         ]);
     }

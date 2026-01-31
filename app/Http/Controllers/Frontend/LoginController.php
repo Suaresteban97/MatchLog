@@ -10,30 +10,25 @@ class LoginController extends Controller
     /**
      * Vista de Login
      */
-    public function index(Request $request){
-        
+    public function index(Request $request)
+    {
+
         if (session('usuario')) {
             return redirect('/dashboard');
         }
 
         RenderController::header([
             "titulo" => "Login",
-            "styles" => [
-
-            ]
+            "styles" => []
         ]);
 
-        echo view ("components.login.login", [
-
-        ]);
+        echo view("components.login.login", []);
 
         RenderController::footer([
             "scripts" => [
                 "login/Login"
             ],
-            "external_scripts" => [
-
-            ]
+            "external_scripts" => []
         ]);
     }
 }
