@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
+use Illuminate\Validation\Rule;
+
 class UpdateProfileRequest extends FormRequest
 {
     /**
@@ -21,10 +23,17 @@ class UpdateProfileRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userId = $this->user()->id;
+
         return [
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'nickname' => 'nullable|string|max:100',
+            'nickname' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('info_users', 'nickname')->ignore($userId, 'user_id'),
+            ],
             'bio' => 'nullable|string|max:1000',
             'age' => 'nullable|integer|min:1|max:120',
             'genre' => 'nullable|string|max:100',
