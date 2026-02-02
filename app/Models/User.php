@@ -47,8 +47,9 @@ class User extends Authenticatable
     }
 
     //Relations
-    
-    public function userDevices() {
+
+    public function userDevices()
+    {
         return $this->hasMany(UserDevice::class);
     }
 
@@ -57,20 +58,21 @@ class User extends Authenticatable
         return $this->belongsToMany(Device::class, 'user_devices');
     }
 
-    public function googleToken() {
-        return $this->belongsToOne(GoogleToken::class, 'user_id')->where("provider", "google");
-    }
+    // public function googleToken() {
+    //     return $this->belongsToOne(GoogleToken::class, 'user_id')->where("provider", "google");
+    // }
 
-    public function userInfo() {
+    public function userInfo()
+    {
         return $this->belongsToOne(InfoUser::class, 'user_id');
     }
 
-    public function simpleTransformer(){
+    public function simpleTransformer()
+    {
         return [
             "code" => $this->id,
             "name" => $this->name,
             "email" => $this->email
         ];
     }
-
 }
