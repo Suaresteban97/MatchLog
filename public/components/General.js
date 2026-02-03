@@ -32,8 +32,10 @@ export default class General {
 
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
-                // Handle unauthorized (optional: redirect to login)
-                // localStorage.removeItem('token');
+                if (response.message === 'Token inválido o expirado') {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                }
             }
             throw { status: response.status, ...data };
         }
