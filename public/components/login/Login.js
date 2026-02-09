@@ -3,10 +3,6 @@ import General from '../General.js';
 
 const { createApp } = Vue;
 
-if (localStorage.getItem('token')) {
-    window.location.href = '/dashboard';
-}
-
 const Login = createApp({
     data() {
         return {
@@ -28,8 +24,6 @@ const Login = createApp({
                 }, {
                     'Admin-Authorization': window.ADMIN_TOKEN
                 });
-
-                localStorage.setItem('token', response.token);
 
                 window.location.href = '/dashboard';
 

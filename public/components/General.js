@@ -10,16 +10,11 @@ export default class General {
      * Get Authorization Headers
      */
     static getHeaders(customHeaders = {}) {
-        const token = localStorage.getItem('token');
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             ...customHeaders
         };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
 
         return headers;
     }
@@ -33,7 +28,6 @@ export default class General {
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
                 if (response.message === 'Token inválido o expirado') {
-                    localStorage.removeItem('token');
                     window.location.href = '/login';
                 }
             }

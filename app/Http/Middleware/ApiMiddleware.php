@@ -24,6 +24,10 @@ class ApiMiddleware
         }
 
         if (!$token) {
+            $token = $request->cookie('auth_token');
+        }
+
+        if (!$token) {
             return response()->json([
                 "code" => 403,
                 "message" => "Usted debe enviar el Header de Autorización o iniciar sesión"

@@ -69,7 +69,7 @@ class AuthController extends Controller
                 'token' => $plainToken,
                 'token_type' => 'Bearer',
                 'expires_at' => $user->token_expires_at
-            ], 201);
+            ], 201)->withCookie(cookie('auth_token', $plainToken, 60 * 24 * 7, '/', null, false, true));
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -101,7 +101,7 @@ class AuthController extends Controller
         return response()->json([
             'token' => $plainToken,
             'expires_at' => $user->token_expires_at
-        ], 200);
+        ], 200)->withCookie(cookie('auth_token', $plainToken, 60 * 24 * 7, '/', null, false, true));
     }
 
     // Cerrar sesión
@@ -116,7 +116,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente'
-        ], 200);
+        ], 200)->withCookie(cookie()->forget('auth_token'));
     }
 
     public function forgotPassword(ForgotPasswordRequest $request)
