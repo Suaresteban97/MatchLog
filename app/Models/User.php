@@ -64,7 +64,47 @@ class User extends Authenticatable
 
     public function userInfo()
     {
-        return $this->belongsToOne(InfoUser::class, 'user_id');
+        return $this->belongsTo(InfoUser::class, 'user_id');
+    }
+
+    // Social Profiles
+    public function socialProfiles()
+    {
+        return $this->hasMany(UserSocialProfile::class);
+    }
+
+    // Execution Platforms
+    public function executionPlatforms()
+    {
+        return $this->belongsToMany(ExecutionPlatform::class, 'user_execution_platforms')
+            ->withPivot('account_identifier', 'created_at')
+            ->withTimestamps();
+    }
+
+    // Followers System
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id')
+            ->withTimestamps();
+    }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id')
+            ->withTimestamps();
+    }
+
+    // Game Sessions
+    public function sessionsHosting()
+    {
+        return $this->hasMany(GameSession::class, 'host_id');
+    }
+
+    public function sessionsParticipating()
+    {
+        return $this->belongsToMany(GameSession::class, 'game_session_participants')
+            ->withPivot('status')
+            ->withTimestamps();
     }
 
     public function simpleTransformer()
