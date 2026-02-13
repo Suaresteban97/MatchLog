@@ -107,6 +107,23 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    // User's Game Library
+    public function games()
+    {
+        return $this->belongsToMany(Game::class, 'user_games')
+            ->withPivot(
+                'game_status_id',
+                'game_platform_id',
+                'hours_played',
+                'is_currently_playing',
+                'started_at',
+                'completed_at',
+                'rating',
+                'notes'
+            )
+            ->withTimestamps();
+    }
+
     public function simpleTransformer()
     {
         return [

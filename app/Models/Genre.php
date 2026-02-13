@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class GamePlatform extends Model
+class Genre extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
     ];
 
     /**
-     * Games available on this platform.
+     * Games in this genre.
      */
     public function games(): BelongsToMany
     {
-        return $this->belongsToMany(Game::class, 'game_game_platform')
-            ->withPivot('release_date');
+        return $this->belongsToMany(Game::class, 'game_genre');
     }
 }

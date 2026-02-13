@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('game_statuses', function (Blueprint $table) {
+        Schema::create('genres', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Playing, Completed, Backlog, etc.
+            $table->string('name'); // Action, RPG, Strategy, etc.
             $table->string('slug')->unique();
             $table->timestamps();
         });
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('game_statuses');
+        Schema::dropIfExists('genres');
     }
 };

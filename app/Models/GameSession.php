@@ -32,4 +32,9 @@ class GameSession extends Model
             ->withPivot('status')
             ->withTimestamps();
     }
+
+    public function game()
+    {
+        return $this->belongsTo(Game::class);
+    }
 }

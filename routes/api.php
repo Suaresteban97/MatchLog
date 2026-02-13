@@ -10,6 +10,10 @@ use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\GoogleAuthController;
+use App\Http\Controllers\Api\FollowerController;
+use App\Http\Controllers\Api\GameSessionController;
+use App\Http\Controllers\Api\ExecutionPlatformController;
+use App\Http\Controllers\Api\SocialProfileController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -50,13 +54,43 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      * Catalog
      */
     Route::get('/catalog', [CatalogController::class, 'index']);
-    
+
     /**
      * User Profile
      */
     Route::get('/profile', [UserProfileController::class, 'show']);
     Route::put('/profile', [UserProfileController::class, 'update']);
-    
+
+    /**
+     * Social Profiles
+     */
+    Route::get('/social-platforms', [SocialProfileController::class, 'platforms']);
+    Route::apiResource('social-profiles', SocialProfileController::class);
+
+    /**
+     * Followers
+     */
+    Route::get('/followers', [FollowerController::class, 'followers']);
+    Route::get('/following', [FollowerController::class, 'following']);
+    Route::post('/follow', [FollowerController::class, 'follow']);
+    Route::post('/unfollow', [FollowerController::class, 'unfollow']);
+    Route::get('/is-following/{userId}', [FollowerController::class, 'isFollowing']);
+
+    /**
+     * Game Sessions
+     */
+    Route::get('/sessions/browse', [GameSessionController::class, 'browse']);
+    Route::post('/sessions/{id}/join', [GameSessionController::class, 'join']);
+    Route::post('/sessions/{id}/leave', [GameSessionController::class, 'leave']);
+    Route::apiResource('sessions', GameSessionController::class);
+
+    /**
+     * Execution Platforms
+     */
+    Route::get('/execution-platforms', [ExecutionPlatformController::class, 'index']);
+    Route::get('/my-execution-platforms', [ExecutionPlatformController::class, 'userPlatforms']);
+    Route::post('/execution-platforms/attach', [ExecutionPlatformController::class, 'attach']);
+    Route::post('/execution-platforms/detach', [ExecutionPlatformController::class, 'detach']);
 });
 
 //Google Auth

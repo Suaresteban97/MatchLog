@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('host_id')->constrained('users')->onDelete('cascade');
             $table->string('title'); // e.g., "Halo Infinite Co-op Night"
-            $table->foreignId('game_id')->nullable(); // Can link to a games table in future
+            $table->foreignId('game_id')->nullable()->constrained('games')->onDelete('set null');
             $table->text('description')->nullable();
             $table->dateTime('start_time');
             $table->integer('max_participants')->default(4);
