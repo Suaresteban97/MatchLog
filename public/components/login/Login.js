@@ -28,8 +28,7 @@ const Login = createApp({
                 window.location.href = '/dashboard';
 
             } catch (err) {
-                console.error(err);
-                this.error = err.message || 'Error al iniciar sesión';
+                this.error = err.message || err.error || 'Error al iniciar sesión';
             } finally {
                 this.loading = false;
             }

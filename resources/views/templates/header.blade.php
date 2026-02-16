@@ -19,13 +19,14 @@
 
     <title>Backlog Project</title>
     <script>
-        window.ADMIN_TOKEN = "{{ env('ADMIN_TOKEN') }}";
+        window.ADMIN_TOKEN = "{{ config('app.admin_token') }}";
     </script>
 </head>
 
 <body>
 
-    <nav id="main-navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4" style="display: none;">
+    @auth
+    <nav id="main-navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/dashboard">MY BACKLOG</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -43,29 +44,18 @@
             </div>
         </div>
     </nav>
+    @endauth
     <script>
-        // Check for token to show navbar
-        if (localStorage.getItem('token')) {
-            document.getElementById('main-navbar').style.display = 'block';
-        }
-
         async function logout() {
             try {
-                // Call API logout (optional, but good practice)
-                // We need to fetch with headers. 
-                // Since General.js is a module, we can't easily use it here without module type script.
-                // We'll just do simple cleanup and redirect.
-
-                const token = localStorage.getItem('token');
-                if (token) {
-                    fetch('/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Bearer ' + token,
-                            'Accept': 'application/json'
-                        }
-                    }).catch(console.error);
-                }
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' 
+                    },
+                    credentials: 'include'
+                });
 
                 localStorage.removeItem('token');
                 window.location.href = '/login';

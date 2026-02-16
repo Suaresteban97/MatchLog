@@ -16,17 +16,18 @@ Route::get('/', function () {
     return redirect()->route('loginView');
 });
 
-/**
- * Protected Frontend Routes
- */
-Route::get('/dashboard', [DashboardController::class, 'index']);
-Route::get('/my-space', [MySpaceController::class, 'index']);
-Route::get('/dashboard', [DashboardController::class, 'index']);
+Route::middleware(['web.auth'])->group(function () {
+    /**
+     * Protected Frontend Routes
+     */
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/my-space', [MySpaceController::class, 'index']);
 
-/**
- * Devices & Profile
- */
-Route::get('/devices', [DeviceController::class, 'index']);
-Route::get('/devices/create', [DeviceController::class, 'create']);
-Route::get('/devices/{id}/edit', [DeviceController::class, 'edit']);
-Route::get('/profile', [ProfileController::class, 'edit']);
+    /**
+     * Devices & Profile
+     */
+    Route::get('/devices', [DeviceController::class, 'index']);
+    Route::get('/devices/create', [DeviceController::class, 'create']);
+    Route::get('/devices/{id}/edit', [DeviceController::class, 'edit']);
+    Route::get('/profile', [ProfileController::class, 'edit']);
+});

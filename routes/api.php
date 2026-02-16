@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\FollowerController;
 use App\Http\Controllers\Api\GameSessionController;
 use App\Http\Controllers\Api\ExecutionPlatformController;
 use App\Http\Controllers\Api\SocialProfileController;
+use App\Http\Controllers\Api\GamesController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -23,6 +24,11 @@ use App\Http\Middleware\AdminMiddleware;
 Route::middleware([AdminMiddleware::class])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
+
+    /**
+     * Games
+     */
+    Route::post('games', [GamesController::class, 'store']);
 });
 
 //Métodos de recuperación de contraseña

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 //Models
@@ -110,13 +111,18 @@ class AuthController extends Controller
         $user = $request->user();
 
         // Invalidar completamente el token
-        $user->api_token = null;
-        $user->token_expires_at = null;
-        $user->save();
+        if ($user) {
+            $user->api_token = null;
+            $user->token_expires_at = null;
+            $user->save();
+            Log::info('User logged out: ' . $user->email);
+        } else {
+            Log::warning('Logout called with no authenticated user');
+        }
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente'
-        ], 200)->withCookie(cookie()->forget('auth_token'));
+        ], 200)->withCookie(cookie('auth_token', '', -1, '/', null, false, true));
     }
 
     public function forgotPassword(ForgotPasswordRequest $request)
