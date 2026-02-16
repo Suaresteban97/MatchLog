@@ -3,23 +3,27 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\GameSession;
-use App\Models\GameSessionParticipant;
-use Illuminate\Http\Request;
+use App\Services\GameSessionService;
 use App\Http\Requests\GameSession\StoreGameSessionRequest;
 use App\Http\Requests\GameSession\UpdateGameSessionRequest;
+use Illuminate\Http\Request;
 
 class GameSessionController extends Controller
 {
+    protected $sessionService;
+
+    public function __construct(GameSessionService $sessionService)
+    {
+        $this->sessionService = $sessionService;
+    }
+
     /**
      * Display a listing of game sessions (hosted by user + participating).
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        $hosting = $user->sessionsHosting()->with('participants', 'host')->get();
-        $participating = $user->sessionsParticipating()->with('host')->get();
+        $hosting = $this->sessionService->getHostingSessions($request->user());
+        $participating = $this->sessionService->getParticipatingSessions($request->user());
 
         return response()->json([
             'hosting' => $hosting,
@@ -32,8 +36,7 @@ class GameSessionController extends Controller
      */
     public function store(StoreGameSessionRequest $request)
     {
-        $session = $request->user()->sessionsHosting()->create($request->validated());
-        $session->load('host');
+        $session = $this->sessionService->createSession($request->user(), $request->validated());
 
         return response()->json(['session' => $session], 201);
     }
@@ -41,11 +44,14 @@ class GameSessionController extends Controller
     /**
      * Display the specified game session.
      */
-    public function show(Request $id)
+    public function show(Request $request, $id)
     {
-        $session = GameSession::with('host', 'participants')->findOrFail($id);
-
-        return response()->json(['session' => $session], 200);
+        try {
+            $session = $this->sessionService->getSession($id);
+            return response()->json(['session' => $session], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sesión no encontrada'], 404);
+        }
     }
 
     /**
@@ -53,11 +59,12 @@ class GameSessionController extends Controller
      */
     public function update(UpdateGameSessionRequest $request, $id)
     {
-        $session = $request->user()->sessionsHosting()->findOrFail($id);
-        $session->update($request->validated());
-        $session->load('host', 'participants');
-
-        return response()->json(['session' => $session], 200);
+        try {
+            $session = $this->sessionService->updateSession($request->user(), $id, $request->validated());
+            return response()->json(['session' => $session], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sesión no encontrada o no eres el anfitrión'], 404);
+        }
     }
 
     /**
@@ -65,10 +72,12 @@ class GameSessionController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $session = $request->user()->sessionsHosting()->findOrFail($id);
-        $session->delete();
-
-        return response()->json(['message' => 'Sesión eliminada correctamente'], 200);
+        try {
+            $this->sessionService->deleteSession($request->user(), $id);
+            return response()->json(['message' => 'Sesión eliminada correctamente'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sesión no encontrada o no eres el anfitrión'], 404);
+        }
     }
 
     /**
@@ -76,30 +85,19 @@ class GameSessionController extends Controller
      */
     public function join(Request $request, $id)
     {
-        $session = GameSession::findOrFail($id);
+        try {
+            $result = $this->sessionService->joinSession($request->user(), $id);
 
-        // Check if already participating
-        $existing = GameSessionParticipant::where('game_session_id', $id)
-            ->where('user_id', $request->user()->id)
-            ->first();
+            if (isset($result['status']) && $result['status'] === 'error') {
+                return response()->json(['error' => $result['message']], $result['code']);
+            }
 
-        if ($existing) {
-            return response()->json(['message' => 'Ya estás participando en esta sesión'], 200);
+            $status = isset($result['status']) && $result['status'] === 'success' ? 201 : 200;
+
+            return response()->json(['message' => $result['message']], $status);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sesión no encontrada'], 404);
         }
-
-        // Check if session is full
-        $currentParticipants = $session->participants()->count();
-        if ($currentParticipants >= $session->max_participants) {
-            return response()->json(['error' => 'La sesión está llena'], 400);
-        }
-
-        GameSessionParticipant::create([
-            'game_session_id' => $id,
-            'user_id' => $request->user()->id,
-            'status' => 'accepted'
-        ]);
-
-        return response()->json(['message' => 'Te uniste a la sesión correctamente'], 201);
     }
 
     /**
@@ -107,13 +105,12 @@ class GameSessionController extends Controller
      */
     public function leave(Request $request, $id)
     {
-        $participant = GameSessionParticipant::where('game_session_id', $id)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
-
-        $participant->delete();
-
-        return response()->json(['message' => 'Abandonaste la sesión'], 200);
+        try {
+            $this->sessionService->leaveSession($request->user(), $id);
+            return response()->json(['message' => 'Abandonaste la sesión'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'No participas en esta sesión'], 404);
+        }
     }
 
     /**
@@ -121,12 +118,7 @@ class GameSessionController extends Controller
      */
     public function browse(Request $request)
     {
-        $sessions = GameSession::with('host')
-            ->where('status', 'scheduled')
-            ->where('start_time', '>', now())
-            ->orderBy('start_time', 'asc')
-            ->paginate(20);
-
+        $sessions = $this->sessionService->browseSessions();
         return response()->json($sessions, 200);
     }
 }

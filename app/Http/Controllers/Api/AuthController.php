@@ -2,18 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-
-//Models
-use App\Models\User;
-use App\Models\InfoUser;
-use App\Models\UsersStatus;
-
-//Request
+use App\Services\AuthService;
+use App\Http\Controllers\Controller; // Ensure Controller is imported
 use App\Http\Requests\User\RegisterRequest;
 use App\Http\Requests\User\LoginRequest;
 use App\Http\Requests\User\LogoutRequest;
@@ -23,57 +13,25 @@ use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    protected $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     public function register(RegisterRequest $request)
     {
-
-        DB::beginTransaction();
-
         try {
-            $user = new User();
-            $user->name = $request->name . " " . $request->last_name;
-            $user->email = $request->email;
-            $user->password = Hash::make($request->password);
-
-            $plainToken = Str::random(80);
-            $user->api_token = hash('sha256', $plainToken);
-            $user->token_expires_at = Carbon::now()->addDays(7);
-            $user->save();
-
-            if (!$user->id) {
-                throw new \Exception("No se pudo crear el usuario");
-            }
-
-            $userStatus = new UsersStatus();
-            $userStatus->user_id = $user->id;
-            $userStatus->status_id = 1;
-            $userStatus->save();
-
-            $userInfo = new InfoUser();
-            $userInfo->first_name = $request->name ?? "";
-            $userInfo->last_name = $request->last_name ?? "";
-            $userInfo->nickname = $request->nickname ?? "";
-            $userInfo->user_id = $user->id;
-
-            if ($request->age) {
-                $userInfo->age = $request->age;
-            }
-            if ($request->genre) {
-                $userInfo->genre = $request->genre;
-            }
-
-            $userInfo->save();
-
-            DB::commit();
+            $result = $this->authService->register($request->validated());
 
             return response()->json([
-                'user' => $user->simpleTransformer(),
-                'token' => $plainToken,
+                'user' => $result['user']->simpleTransformer(),
+                'token' => $result['plainToken'],
                 'token_type' => 'Bearer',
-                'expires_at' => $user->token_expires_at
-            ], 201)->withCookie(cookie('auth_token', $plainToken, 60 * 24 * 7, '/', null, false, true));
+                'expires_at' => $result['user']->token_expires_at
+            ], 201)->withCookie(cookie('auth_token', $result['plainToken'], 60 * 24 * 7, '/', null, false, true));
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'error' => 'Error en el registro',
                 'message' => $e->getMessage(),
@@ -84,41 +42,22 @@ class AuthController extends Controller
     // Inicio de sesión
     public function login(LoginRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $result = $this->authService->login($request->email, $request->password);
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$result) {
             return response()->json(['error' => 'Credenciales incorrectas'], 401);
         }
 
-        $plainToken = Str::random(80);
-        $hashedToken = hash_hmac('sha256', $plainToken, env('APP_KEY'));
-
-        // Generar un nuevo token
-        $plainToken = Str::random(80);
-        $user->api_token = hash('sha256', $plainToken);
-        $user->token_expires_at = Carbon::now()->addDays(7);
-        $user->save();
-
         return response()->json([
-            'token' => $plainToken,
-            'expires_at' => $user->token_expires_at
-        ], 200)->withCookie(cookie('auth_token', $plainToken, 60 * 24 * 7, '/', null, false, true));
+            'token' => $result['plainToken'],
+            'expires_at' => $result['user']->token_expires_at
+        ], 200)->withCookie(cookie('auth_token', $result['plainToken'], 60 * 24 * 7, '/', null, false, true));
     }
 
     // Cerrar sesión
     public function logout(LogoutRequest $request)
     {
-        $user = $request->user();
-
-        // Invalidar completamente el token
-        if ($user) {
-            $user->api_token = null;
-            $user->token_expires_at = null;
-            $user->save();
-            Log::info('User logged out: ' . $user->email);
-        } else {
-            Log::warning('Logout called with no authenticated user');
-        }
+        $this->authService->logout($request->user());
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente'
@@ -127,24 +66,7 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPasswordRequest $request)
     {
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json([
-                'message' => 'Si el correo existe, hemos enviado un token de recuperación.'
-            ], 200);
-        }
-
-        $token = Str::random(60);
-
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->email],
-            ['token' => $token, 'created_at' => Carbon::now()]
-        );
-
-        // Enviar correo con el token
-        // ForgotPasswordJob::dispatch($token, $request->email)->onQueue('high');
+        $token = $this->authService->forgotPassword($request->email);
 
         return response()->json([
             'message' => 'Si el correo existe, hemos enviado un token de recuperación.',
@@ -154,46 +76,16 @@ class AuthController extends Controller
 
     public function resetPassword(ResetPasswordRequest $request)
     {
-        // Buscar el token en la base de datos
-        $passwordReset = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->first();
+        $result = $this->authService->resetPassword($request->email, $request->token, $request->password);
 
-        if (!$passwordReset || $request->token !== $passwordReset->token) {
+        if (isset($result['status']) && $result['status'] === 'error') {
             return response()->json([
-                'message' => 'El token es inválido o ha expirado'
-            ], 400);
+                'message' => $result['message']
+            ], $result['code']);
         }
-
-        $tokenAge = Carbon::parse($passwordReset->created_at)->diffInMinutes(Carbon::now());
-        if ($tokenAge > 60) {
-            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-
-            return response()->json([
-                'message' => 'El token ha expirado. Solicita uno nuevo.'
-            ], 400);
-        }
-
-        // Buscar el usuario
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json([
-                'message' => 'Usuario no encontrado'
-            ], 404);
-        }
-
-        $user->password = Hash::make($request->password);
-
-        $user->api_token = null;
-        $user->token_expires_at = null;
-
-        $user->save();
-
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return response()->json([
-            'message' => 'Contraseña actualizada correctamente. Por favor, inicia sesión nuevamente.'
+            'message' => $result['message']
         ], 200);
     }
 }

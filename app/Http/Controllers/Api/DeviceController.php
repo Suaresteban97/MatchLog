@@ -4,21 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Device\AddDeviceRequest;
 use App\Http\Requests\Device\UpdateDeviceRequest;
-use App\Models\UserDevice;
-use App\Models\DeviceCharacteristic;
+use App\Services\DeviceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DeviceController extends Controller
 {
+    protected $deviceService;
+
+    public function __construct(DeviceService $deviceService)
+    {
+        $this->deviceService = $deviceService;
+    }
+
     /**
      * Get all devices for the authenticated user
      */
     public function index(Request $request)
     {
-        $devices = UserDevice::with(['device', 'characteristics.pcComponent'])
-            ->where('user_id', $request->user()->id)
-            ->get();
+        $devices = $this->deviceService->getUserDevices($request->user());
 
         return response()->json([
             'devices' => $devices
@@ -30,12 +33,12 @@ class DeviceController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $userDevice = UserDevice::where('user_id', $request->user()->id)
-            ->where('id', $id)
-            ->with(['device', 'characteristics.pcComponent'])
-            ->firstOrFail();
-
-        return response()->json(['device' => $userDevice], 200);
+        try {
+            $userDevice = $this->deviceService->getUserDevice($request->user(), $id);
+            return response()->json(['device' => $userDevice], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Dispositivo no encontrado'], 404);
+        }
     }
 
     /**
@@ -43,38 +46,14 @@ class DeviceController extends Controller
      */
     public function store(AddDeviceRequest $request)
     {
-        DB::beginTransaction();
-
         try {
-            $userDevice = new UserDevice();
-            $userDevice->user_id = $request->user()->id;
-            $userDevice->device_id = $request->device_id;
-            $userDevice->custom_name = $request->custom_name;
-            $userDevice->save();
-
-            if ($request->has('characteristics')) {
-                foreach ($request->characteristics as $characteristic) {
-                    $deviceChar = new DeviceCharacteristic();
-                    $deviceChar->user_device_id = $userDevice->id;
-                    $deviceChar->key = $characteristic['key'];
-                    $deviceChar->value = $characteristic['value'] ?? null;
-                    $deviceChar->pc_component_id = $characteristic['pc_component_id'] ?? null;
-                    $deviceChar->save();
-                }
-            }
-
-            DB::commit();
-
-            $userDevice->load(['device', 'characteristics.pcComponent']);
+            $userDevice = $this->deviceService->storeDevice($request->user(), $request->validated());
 
             return response()->json([
                 'message' => 'Dispositivo agregado correctamente',
                 'device' => $userDevice
             ], 201);
-
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'error' => 'Error al agregar dispositivo',
                 'message' => $e->getMessage()
@@ -87,49 +66,20 @@ class DeviceController extends Controller
      */
     public function update(UpdateDeviceRequest $request, $id)
     {
-        $userDevice = UserDevice::where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->first();
-
-        if (!$userDevice) {
-            return response()->json([
-                'message' => 'Dispositivo no encontrado'
-            ], 404);
-        }
-
-        DB::beginTransaction();
-
         try {
-            if ($request->has('custom_name')) {
-                $userDevice->custom_name = $request->custom_name;
-                $userDevice->save();
+            $userDevice = $this->deviceService->updateDevice($request->user(), $id, $request->validated());
+
+            if (!$userDevice) {
+                return response()->json([
+                    'message' => 'Dispositivo no encontrado'
+                ], 404);
             }
-
-            if ($request->has('characteristics')) {
-                DeviceCharacteristic::where('user_device_id', $userDevice->id)->delete();
-
-                foreach ($request->characteristics as $characteristic) {
-                    $deviceChar = new DeviceCharacteristic();
-                    $deviceChar->user_device_id = $userDevice->id;
-                    $deviceChar->key = $characteristic['key'];
-                    $deviceChar->value = $characteristic['value'] ?? null;
-                    $deviceChar->pc_component_id = $characteristic['pc_component_id'] ?? null;
-                    $deviceChar->save();
-                }
-            }
-
-            DB::commit();
-
-            $userDevice->load(['device', 'characteristics.pcComponent']);
 
             return response()->json([
                 'message' => 'Dispositivo actualizado correctamente',
                 'device' => $userDevice
             ], 200);
-
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'error' => 'Error al actualizar dispositivo',
                 'message' => $e->getMessage()
@@ -142,17 +92,13 @@ class DeviceController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $userDevice = UserDevice::where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->first();
+        $deleted = $this->deviceService->deleteDevice($request->user(), $id);
 
-        if (!$userDevice) {
+        if (!$deleted) {
             return response()->json([
                 'message' => 'Dispositivo no encontrado'
             ], 404);
         }
-
-        $userDevice->delete();
 
         return response()->json([
             'message' => 'Dispositivo eliminado correctamente'
