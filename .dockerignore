@@ -6,4 +6,4 @@ storage/framework/sessions/*
 storage/framework/views/*
 storage/logs/*
 tests
-.env
+.envnode_modules

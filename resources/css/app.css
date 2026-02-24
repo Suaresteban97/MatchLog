@@ -1,12 +1,255 @@
-@import 'tailwindcss';
+:root {
+    --bg-dark: #09090b;
+    --bg-card: #121217;
+    --neon-purple: #bc13fe;
+    --neon-blue: #0ff0fc;
+    --neon-pink: #f00fac;
+    --text-main: #ffffff;
+    --text-muted: #a1a1aa;
+    --border-color: #27272a;
+}
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source "../**/*.blade.php";
-@source "../**/*.js";
-@source "../**/*.vue";
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Ysabeau Infant', sans-serif;
+    display: block;
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(188, 19, 254, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(15, 240, 252, 0.08), transparent 25%);
+    background-attachment: fixed;
+    background-size: cover;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+select.form-select,
+select.form-select option {
+    background-color: var(--bg-card) !important;
+    color: white !important;
+    border-color: var(--border-color);
+}
+
+select.form-select:focus {
+    background-color: var(--bg-card) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.25rem rgba(188, 19, 254, 0.25);
+    border-color: var(--neon-purple);
+}
+
+/* Navbar Cyberpunk Style */
+#main-navbar {
+    background: rgba(18, 18, 23, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(188, 19, 254, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 900;
+    color: var(--text-main) !important;
+    text-shadow: 0 0 10px var(--neon-purple);
+    letter-spacing: 2px;
+}
+
+.nav-link {
+    color: var(--text-muted) !important;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--neon-blue) !important;
+    text-shadow: 0 0 8px var(--neon-blue);
+}
+
+.btn i {
+    pointer-events: none;
+}
+
+/* Card Cyberpunk Style */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(188, 19, 254, 0.2);
+    border-color: var(--neon-purple);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transition: 0.5s;
+}
+
+.card:hover::before {
+    left: 100%;
+}
+
+.card-header {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Buttons */
+.btn-primary {
+    background: transparent;
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: 0 0 10px rgba(15, 240, 252, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--neon-blue);
+    color: #000;
+    box-shadow: 0 0 20px rgba(15, 240, 252, 0.6);
+}
+
+.btn-outline-danger {
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+}
+
+.btn-outline-danger:hover {
+    background: var(--neon-pink);
+    color: #fff;
+    box-shadow: 0 0 15px var(--neon-pink);
+}
+
+/* Login */
+#login {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    background: var(--bg-card);
+    padding: 3rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 30px rgba(188, 19, 254, 0.15);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+.login-container h2 {
+    margin-bottom: 2rem;
+    font-weight: 700;
+    text-shadow: 0 0 10px var(--neon-purple);
+}
+
+.input-group {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.input-group:focus-within {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 10px rgba(15, 240, 252, 0.2);
+}
+
+.input-group input {
+    background: transparent !important;
+    border: none;
+    color: white !important;
+    width: 100%;
+    outline: none;
+    padding: 5px;
+}
+
+.input-group input:-webkit-autofill,
+.input-group input:-webkit-autofill:hover,
+.input-group input:-webkit-autofill:focus,
+.input-group input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #121217 inset !important;
+    /* Match card bg */
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.input-group i {
+    color: var(--neon-purple);
+    margin-right: 15px;
+    font-size: 1.2rem;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Custom Login Button Class if used */
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    border-radius: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+}
+
+.login-btn:hover {
+    background: var(--neon-blue);
+    color: black;
+    box-shadow: 0 0 20px rgba(15, 240, 252, 0.5);
+}
+
+/* Utilities */
+.text-primary {
+    color: var(--neon-blue) !important;
+}
+
+.badge {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bg-dark {
+    background-color: var(--bg-card) !important;
+}
+
+.bg-secondary {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.border-secondary {
+    border-color: var(--border-color) !important;
+}
+
+[v-cloak] {
+    display: none !important;
 }
