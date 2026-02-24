@@ -10,17 +10,8 @@ class MySpaceController extends Controller
 {
     public function index()
     {
-        RenderController::header([
-            "titulo" => "Mi Espacio",
-            "module" => 1 // Dashboard module (maybe keep as 1 or change?)
-        ]);
-
-        echo view('components.myspace.myspace');
-
-        RenderController::footer([
-            "scripts" => [
-                "myspace/MySpace"
-            ]
+        return \Inertia\Inertia::render('Frontend/MySpace', [
+            'module' => 1 // Dashboard module
         ]);
     }
 }

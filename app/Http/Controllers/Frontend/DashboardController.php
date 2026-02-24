@@ -10,17 +10,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        RenderController::header([
-            "titulo" => "Social Dashboard",
-            "module" => 0 // Social module
-        ]);
-
-        echo view('components.dashboard.social');
-
-        RenderController::footer([
-            "scripts" => [
-                "social/Social"
-            ]
+        return \Inertia\Inertia::render('Frontend/Dashboard', [
+            'module' => 0 // Social module
         ]);
     }
 }

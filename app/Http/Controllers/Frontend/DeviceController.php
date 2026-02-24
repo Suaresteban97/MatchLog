@@ -13,17 +13,8 @@ class DeviceController extends Controller
      */
     public function index()
     {
-        RenderController::header([
-            "titulo" => "Mis Dispositivos",
-            "module" => 2 // Devices module
-        ]);
-
-        echo view('components.devices.index');
-
-        RenderController::footer([
-            "scripts" => [
-                "devices/DeviceList"
-            ]
+        return \Inertia\Inertia::render('Frontend/DeviceList', [
+            'module' => 2 // Devices module
         ]);
     }
 
@@ -32,17 +23,8 @@ class DeviceController extends Controller
      */
     public function create()
     {
-        RenderController::header([
-            "titulo" => "Agregar Dispositivo",
-            "module" => 2
-        ]);
-
-        echo view('components.devices.form');
-
-        RenderController::footer([
-            "scripts" => [
-                "devices/DeviceForm"
-            ]
+        return \Inertia\Inertia::render('Frontend/DeviceForm', [
+            'module' => 2
         ]);
     }
 
@@ -51,19 +33,9 @@ class DeviceController extends Controller
      */
     public function edit($id)
     {
-        RenderController::header([
-            "titulo" => "Editar Dispositivo",
-            "module" => 2
-        ]);
-
-        // Inject ID to view for JS to use
-        echo "<script>window.DEVICE_ID = {$id};</script>";
-        echo view('components.devices.form');
-
-        RenderController::footer([
-            "scripts" => [
-                "devices/DeviceForm"
-            ]
+        return \Inertia\Inertia::render('Frontend/DeviceForm', [
+            'module' => 2,
+            'deviceId' => $id
         ]);
     }
 }
