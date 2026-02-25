@@ -32,6 +32,19 @@ services:
     networks:
       - backlog-network
 
+  # Node para Vite (Compilación de Vue/Inertia en desarrollo)
+  node:
+    image: node:20-alpine
+    container_name: backlog-node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "5173:5173"
+    command: npm run dev
+    networks:
+      - backlog-network
+
   # MySQL
   db:
     image: mysql:8.0

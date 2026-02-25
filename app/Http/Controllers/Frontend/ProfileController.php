@@ -13,17 +13,8 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        RenderController::header([
-            "titulo" => "Editar Perfil",
-            "module" => 3 // Profile module code
-        ]);
-
-        echo view('components.profile.form');
-
-        RenderController::footer([
-            "scripts" => [
-                "profile/ProfileForm"
-            ]
+        return \Inertia\Inertia::render('Frontend/ProfileForm', [
+            'module' => 3 // Profile module code
         ]);
     }
 }
