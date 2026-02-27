@@ -15,7 +15,7 @@ const submit = async () => {
 
     <div id="login">
         <div class="login-container">
-            <h2>MY BACKLOG</h2>
+            <h2>Matchlog</h2>
             
             <div v-if="error" class="alert alert-danger mb-4" role="alert" style="background: rgba(220,53,69,0.2) !important; color: var(--neon-pink); border-color: var(--neon-pink);">
                 {{ error }}
