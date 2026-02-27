@@ -18,7 +18,7 @@ defineProps({
                         <i class="fas fa-chart-line me-2"></i>Dashboard Social
                     </div>
                     <div class="card-body">
-                        <h3>Bienvenido a MyBackLog!</h3>
+                        <h3>Bienvenido a MatchLog!</h3>
                         <p class="text-muted">Módulo Actual: {{ module }}</p>
                     </div>
                 </div>

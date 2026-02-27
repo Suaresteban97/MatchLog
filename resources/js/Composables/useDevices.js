@@ -10,6 +10,22 @@ export function useDevices() {
 
     // Estado para el formulario (DeviceForm)
     const catalog = reactive({
+        types: [
+            'cpu',
+            'gpu',
+            'ram',
+            'storage',
+            'motherboard',
+            'psu',
+            'case',
+            'cooler',
+            'monitor',
+            'keyboard',
+            'mouse',
+            'headset',
+            'controller',
+            'other'
+        ],
         devices: [],
         components: {}
     });
@@ -77,7 +93,6 @@ export function useDevices() {
 
     const loadCatalog = async () => {
         try {
-            // Nota: Podría venir un error 404 si la API /catalog no existe, basándonos en tu JS antiguo parece existir
             const response = await get('/catalog');
             catalog.devices = response.devices;
             catalog.components = response.components;

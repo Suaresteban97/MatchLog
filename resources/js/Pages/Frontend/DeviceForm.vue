@@ -49,7 +49,7 @@ onMounted(async () => {
     <Head :title="deviceId ? 'Editar Dispositivo' : 'Nuevo Dispositivo'" />
 
     <AppLayout v-cloak>
-        <div class="row pt-4 justify-content-center">
+        <div class="row pt-4 justify-content-center">            
             <div class="col-12 col-md-8">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -103,13 +103,36 @@ onMounted(async () => {
                                     
                                     <div v-for="(char, index) in form.characteristics" :key="index" class="d-flex flex-column mb-3 p-2 border border-dark rounded bg-dark">
                                         <div class="d-flex gap-2 align-items-center mb-2">
-                                            <select v-model="char.key" class="form-select bg-dark text-white border-secondary w-auto">
-                                                <option value="" disabled>Componente</option>
-                                                <option v-for="(name, key) in catalog.components" :key="key" :value="key">
-                                                    {{ name }}
+                                            <!-- Primer Select: Tipo de Componente -->
+                                            <select v-model="char.key" @change="char.pc_component_id = ''; char.value = ''" class="form-select bg-dark text-white border-secondary w-auto">
+                                                <option value="" disabled>Selecciona Tipo</option>
+                                                <option v-for="type in catalog.types" :key="type" :value="type">
+                                                    {{ type.toUpperCase() }}
                                                 </option>
                                             </select>
                                             
+                                            <!-- Segundo Select: Componentes del catálogo (si el tipo existe en components) -->
+                                            <template v-if="char.key && catalog.components[char.key]">
+                                                <select 
+                                                    v-model="char.pc_component_id" 
+                                                    @change="(e) => { 
+                                                        if(e.target.value !== 'manual') {
+                                                            const comp = catalog.components[char.key].find(c => c.id == e.target.value);
+                                                            char.value = comp ? (comp.brand ? comp.brand + ' ' : '') + comp.name : '';
+                                                        } else {
+                                                            char.value = '';
+                                                        }
+                                                    }"
+                                                    class="form-select bg-dark text-white border-secondary flex-grow-1"
+                                                >
+                                                    <option value="" disabled>Selecciona {{ char.key.toUpperCase() }}</option>
+                                                    <option v-for="comp in catalog.components[char.key]" :key="comp.id" :value="comp.id">
+                                                        {{ comp.brand ? comp.brand + ' ' : '' }}{{ comp.name }}
+                                                    </option>
+                                                    <option value="manual">¿No ves tu componente? (Entrada Manual)</option>
+                                                </select>
+                                            </template>
+
                                             <button type="button" @click="removeCharacteristic(index)" class="btn btn-outline-danger btn-sm ms-auto">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -138,9 +161,14 @@ onMounted(async () => {
                                             </div>
                                         </div>
                                         
-                                        <!-- Fallback: Input de texto normal si no es JSON (o para editar a mano si se desea) -->
-                                        <div v-else>
+                                        <!-- Fallback: Input de texto normal si elige manual o el tipo no tiene catálogo -->
+                                        <div v-else-if="char.pc_component_id === 'manual' || !catalog.components[char.key] || (char.key && !catalog.components[char.key].length)">
                                              <input type="text" v-model="char.value" placeholder="Valor (Ej. RTX 4090, 32GB RAM)" class="form-control bg-dark text-white border-secondary w-100">
+                                        </div>
+
+                                        <!-- Info label si se eligió del catálogo -->
+                                        <div v-else-if="char.pc_component_id" class="mt-2 p-2 rounded bg-dark border border-secondary border-opacity-50 small text-secondary d-flex align-items-center">
+                                            <i class="fas fa-info-circle me-2"></i> {{ char.value }} (Desde catálogo)
                                         </div>
                                     </div>
                                     
@@ -150,7 +178,7 @@ onMounted(async () => {
                                 </div>
 
                                 <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary btn-lg fw-bold tracking-widest text-uppercase" :disabled="isSaving" style="background-color: var(--neon-cyan); border-color: var(--neon-cyan); color: #000;">
+                                    <button type="submit" class="btn btn-primary btn-lg fw-bold text-white tracking-widest text-uppercase" :disabled="isSaving" style="background-color: var(--neon-cyan); border-color: var(--neon-cyan); color: #000;">
                                         <i v-if="isSaving" class="fas fa-spinner fa-spin me-2"></i>
                                         <i v-else class="fas fa-save me-2"></i>
                                         {{ isSaving ? 'Guardando...' : 'Guardar Dispositivo' }}

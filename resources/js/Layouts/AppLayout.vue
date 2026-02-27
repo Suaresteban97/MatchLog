@@ -19,7 +19,7 @@ const logout = async () => {
     <div>
         <nav id="main-navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
             <div class="container">
-                <Link class="navbar-brand fw-bold" href="/dashboard">MY BACKLOG</Link>
+                <Link class="navbar-brand fw-bold" href="/dashboard">Matchlog</Link>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
