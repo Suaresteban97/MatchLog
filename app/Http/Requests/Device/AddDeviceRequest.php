@@ -25,7 +25,7 @@ class AddDeviceRequest extends FormRequest
             'device_id' => 'required|exists:devices,id',
             'custom_name' => 'nullable|string|max:100',
             'characteristics' => 'nullable|array',
-            'characteristics.*.key' => 'required_with:characteristics|string|in:cpu,gpu,ram,storage',
+            'characteristics.*.key' => 'required_with:characteristics|string|in:cpu,gpu,ram,storage,motherboard,psu,case,cooler,monitor,keyboard,mouse,headset,controller,other',
             'characteristics.*.value' => 'nullable|string|max:255',
             'characteristics.*.pc_component_id' => 'nullable|exists:pc_components,id',
         ];

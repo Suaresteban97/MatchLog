@@ -253,3 +253,26 @@ select.form-select:focus {
 [v-cloak] {
     display: none !important;
 }
+
+/* ---- Profile Tabs ---- */
+.profile-tab {
+    background: transparent;
+    border: none;
+    color: #adb5bd;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 0.5rem 1.25rem;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.profile-tab:hover {
+    color: var(--neon-blue);
+    background: rgba(0, 255, 240, 0.05);
+}
+
+.profile-tab.tab-active {
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--neon-blue) !important;
+    border-bottom: 2px solid var(--neon-blue);
+    font-weight: 600;
+}
