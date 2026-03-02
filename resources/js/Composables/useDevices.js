@@ -10,6 +10,11 @@ export function useDevices() {
 
     // Estado para el formulario (DeviceForm)
     const catalog = reactive({
+        types: [
+            'cpu', 'gpu', 'ram', 'storage', 'motherboard',
+            'psu', 'case', 'cooler', 'monitor', 'keyboard',
+            'mouse', 'headset', 'controller', 'other'
+        ],
         devices: [],
         components: {}
     });
@@ -77,7 +82,6 @@ export function useDevices() {
 
     const loadCatalog = async () => {
         try {
-            // Nota: Podría venir un error 404 si la API /catalog no existe, basándonos en tu JS antiguo parece existir
             const response = await get('/catalog');
             catalog.devices = response.devices;
             catalog.components = response.components;
@@ -146,6 +150,17 @@ export function useDevices() {
         // Gbl
         loading,
         isSaving,
-        error
+        error,
+        // JSON helpers para visualización de hardware
+        isJsonStruct: (value) => {
+            if (!value || typeof value !== 'string') return false;
+            try {
+                const parsed = JSON.parse(value);
+                return parsed && typeof parsed === 'object' && parsed.components !== undefined;
+            } catch (e) { return false; }
+        },
+        getJsonStruct: (value) => {
+            try { return JSON.parse(value); } catch (e) { return { components: {} }; }
+        }
     }
 }
