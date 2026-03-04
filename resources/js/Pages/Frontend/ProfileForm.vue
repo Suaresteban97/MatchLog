@@ -4,6 +4,7 @@ import { Head } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import ProfileSettingsTab from './Components/ProfileSettingsTab.vue';
 import DevicesTab from './Components/DevicesTab.vue';
+import SocialProfilesTab from './Components/SocialProfilesTab.vue';
 
 defineProps({
     module: Number,
@@ -34,6 +35,12 @@ const activeTab = ref('profile');
                             <i class="fas fa-gamepad me-2"></i>Mis Dispositivos
                         </button>
                     </li>
+                    <li class="nav-item">
+                        <button class="nav-link profile-tab" :class="{ 'tab-active': activeTab === 'social_profiles' }"
+                            @click="activeTab = 'social_profiles'">
+                            <i class="fas fa-users me-2"></i>Perfiles Sociales
+                        </button>
+                    </li>
                 </ul>
 
                 <!-- ==================== TAB: PERFIL ==================== -->
@@ -44,6 +51,11 @@ const activeTab = ref('profile');
                 <!-- ==================== TAB: DISPOSITIVOS ==================== -->
                 <div v-show="activeTab === 'devices'">
                     <DevicesTab />
+                </div>
+
+                <!-- ==================== TAB: PERFILES SOCIALES ==================== -->
+                <div v-show="activeTab === 'social_profiles'">
+                    <SocialProfilesTab />
                 </div>
 
             </div>
