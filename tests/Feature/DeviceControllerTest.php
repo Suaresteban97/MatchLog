@@ -13,8 +13,6 @@ use Carbon\Carbon;
 
 class DeviceControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected $user;
     protected $token;
 
@@ -28,7 +26,7 @@ class DeviceControllerTest extends TestCase
         $this->user->api_token = hash('sha256', $plainToken);
         $this->user->token_expires_at = Carbon::now()->addDays(7);
         $this->user->save();
-        
+
         $this->token = $plainToken;
     }
 

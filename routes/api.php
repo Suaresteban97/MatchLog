@@ -26,9 +26,10 @@ Route::middleware([AdminMiddleware::class])->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 
     /**
-     * Games
+     * Games (Admin overrides)
      */
     Route::post('games', [GamesController::class, 'store']);
+    Route::put('games/{game}', [GamesController::class, 'update']);
 });
 
 //Métodos de recuperación de contraseña
@@ -97,6 +98,16 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::get('/my-execution-platforms', [ExecutionPlatformController::class, 'userPlatforms']);
     Route::post('/execution-platforms/attach', [ExecutionPlatformController::class, 'attach']);
     Route::post('/execution-platforms/detach', [ExecutionPlatformController::class, 'detach']);
+
+    /**
+     * Games
+     */
+    Route::get('/games', [GamesController::class, 'getGames']);
+    Route::get('/games/{id}', [GamesController::class, 'show']);
+    Route::get('/my-games', [GamesController::class, 'getUserGames']);
+    Route::put('/my-games/{id}', [GamesController::class, 'updateUserGame']);
+    Route::post('/my-games/{id}/toggle', [GamesController::class, 'toggleUserGame']);
+    Route::patch('/my-games/{id}/status', [GamesController::class, 'changeStatus']);
 });
 
 //Google Auth

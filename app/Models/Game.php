@@ -17,10 +17,19 @@ class Game extends Model
         'publisher',
         'metacritic_score',
         'igdb_id',
+        'is_multiplayer',
+        'is_online_multiplayer',
+        'is_local_multiplayer',
+        'is_cooperative',
+        'max_players',
     ];
 
     protected $casts = [
         'release_date' => 'date',
+        'is_multiplayer' => 'boolean',
+        'is_online_multiplayer' => 'boolean',
+        'is_local_multiplayer' => 'boolean',
+        'is_cooperative' => 'boolean',
     ];
 
     /**
@@ -65,5 +74,13 @@ class Game extends Model
                 'notes'
             )
             ->withTimestamps();
+    }
+
+    /**
+     * User-game pivot records for this game (including status).
+     */
+    public function userGames(): HasMany
+    {
+        return $this->hasMany(UserGame::class);
     }
 }

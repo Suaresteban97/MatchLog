@@ -21,6 +21,11 @@ return new class extends Migration
             $table->string('publisher')->nullable();
             $table->integer('metacritic_score')->nullable();
             $table->string('igdb_id')->nullable(); // External API reference
+            $table->boolean('is_multiplayer')->default(false);
+            $table->boolean('is_online_multiplayer')->default(false);
+            $table->boolean('is_local_multiplayer')->default(false);
+            $table->boolean('is_cooperative')->default(false);
+            $table->unsignedInteger('max_players')->nullable();
             $table->timestamps();
         });
     }
