@@ -1,5 +1,5 @@
 <script setup>
-import { useProfile } from '../../Composables/useProfile';
+import { useProfile } from '../../../Composables/useProfile';
 import { onMounted } from 'vue';
 
 const {
@@ -22,7 +22,8 @@ onMounted(async () => {
             <div v-if="successMessage" class="alert alert-success border-success text-success bg-dark mb-4">
                 <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
             </div>
-            <div v-if="error" class="alert alert-danger mb-4" role="alert" style="background: rgba(220,53,69,0.2) !important; color: var(--neon-pink); border-color: var(--neon-pink);">
+            <div v-if="error" class="alert alert-danger mb-4" role="alert"
+                style="background: rgba(220,53,69,0.2) !important; color: var(--neon-pink); border-color: var(--neon-pink);">
                 <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
             </div>
 
@@ -35,28 +36,33 @@ onMounted(async () => {
                 <div class="row mb-4">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold text-white">Nombre</label>
-                        <input type="text" v-model="profile.first_name" class="form-control bg-dark text-white border-secondary" required>
+                        <input type="text" v-model="profile.first_name"
+                            class="form-control bg-dark text-white border-secondary" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold text-white">Apellidos</label>
-                        <input type="text" v-model="profile.last_name" class="form-control bg-dark text-white border-secondary" required>
+                        <input type="text" v-model="profile.last_name"
+                            class="form-control bg-dark text-white border-secondary" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold text-white">Nickname o Alias</label>
                         <div class="input-group">
                             <span class="input-group-text bg-dark text-white border-secondary">@</span>
-                            <input type="text" v-model="profile.nickname" class="form-control bg-dark text-white border-secondary" required>
+                            <input type="text" v-model="profile.nickname"
+                                class="form-control bg-dark text-white border-secondary" required>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold text-white">Edad</label>
-                        <input type="number" v-model="profile.age" class="form-control bg-dark text-white border-secondary">
+                        <input type="number" v-model="profile.age"
+                            class="form-control bg-dark text-white border-secondary">
                     </div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold text-white">Biografía</label>
-                    <textarea v-model="profile.bio" class="form-control bg-dark text-white border-secondary" rows="4" placeholder="Cuéntanos sobre ti..."></textarea>
+                    <textarea v-model="profile.bio" class="form-control bg-dark text-white border-secondary" rows="4"
+                        placeholder="Cuéntanos sobre ti..."></textarea>
                 </div>
 
                 <div class="mb-4 p-3 border border-secondary rounded bg-secondary bg-opacity-10">
@@ -66,8 +72,10 @@ onMounted(async () => {
                         <label class="form-check-label text-white" for="shareEmail">Compartir Email Públicamente</label>
                     </div>
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="lfgSwitch" v-model="profile.available_for_online">
-                        <label class="form-check-label text-white" for="lfgSwitch">Disponible para Jugar Online (LFG)</label>
+                        <input class="form-check-input" type="checkbox" id="lfgSwitch"
+                            v-model="profile.available_for_online">
+                        <label class="form-check-label text-white" for="lfgSwitch">Disponible para Jugar Online
+                            (LFG)</label>
                     </div>
                 </div>
 
