@@ -11,8 +11,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class GameSessionControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected $user;
     protected $token;
 

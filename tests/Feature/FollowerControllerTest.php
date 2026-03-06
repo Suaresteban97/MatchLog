@@ -10,8 +10,6 @@ use Carbon\Carbon;
 
 class FollowerControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected $user1;
     protected $user2;
     protected $token;

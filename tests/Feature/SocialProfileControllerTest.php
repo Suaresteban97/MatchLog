@@ -12,8 +12,6 @@ use Carbon\Carbon;
 
 class SocialProfileControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected $user;
     protected $platform;
     protected $token;

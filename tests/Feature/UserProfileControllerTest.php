@@ -11,8 +11,6 @@ use Carbon\Carbon;
 
 class UserProfileControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected $user;
     protected $token;
 
@@ -26,7 +24,7 @@ class UserProfileControllerTest extends TestCase
         $this->user->api_token = hash('sha256', $plainToken);
         $this->user->token_expires_at = Carbon::now()->addDays(7);
         $this->user->save();
-        
+
         $this->token = $plainToken;
     }
 
