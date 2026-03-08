@@ -5,6 +5,7 @@ import AppLayout from '../../Layouts/AppLayout.vue';
 import ProfileSettingsTab from './Components/ProfileSettingsTab.vue';
 import DevicesTab from './Components/DevicesTab.vue';
 import SocialProfilesTab from './Components/SocialProfilesTab.vue';
+import GamesTab from './Components/GamesTab.vue';
 
 defineProps({
     module: Number,
@@ -41,6 +42,12 @@ const activeTab = ref('profile');
                             <i class="fas fa-users me-2"></i>Perfiles Sociales
                         </button>
                     </li>
+                    <li class="nav-item">
+                        <button class="nav-link profile-tab" :class="{ 'tab-active': activeTab === 'games' }"
+                            @click="activeTab = 'games'">
+                            <i class="fas fa-gamepad me-2 text-primary"></i>Mis Juegos
+                        </button>
+                    </li>
                 </ul>
 
                 <!-- ==================== TAB: PERFIL ==================== -->
@@ -56,6 +63,11 @@ const activeTab = ref('profile');
                 <!-- ==================== TAB: PERFILES SOCIALES ==================== -->
                 <div v-show="activeTab === 'social_profiles'">
                     <SocialProfilesTab />
+                </div>
+
+                <!-- ==================== TAB: MIS JUEGOS ==================== -->
+                <div v-show="activeTab === 'games'">
+                    <GamesTab />
                 </div>
 
             </div>
