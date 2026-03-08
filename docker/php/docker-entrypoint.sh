@@ -19,11 +19,11 @@ echo "Limpiando caché de Laravel..."
 php artisan config:clear
 
 # echo "Optimizando rutas..."
-# php artisan route:cache
+php artisan route:cache
 
 # En desarrollo, NO cacheamos configuración ni vistas para ver cambios al instante
-# php artisan config:cache
-# php artisan view:cache
+php artisan config:cache
+php artisan view:cache
 
 # Luego el resto de tus comandos...
 exec "$@"

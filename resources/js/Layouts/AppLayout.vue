@@ -32,11 +32,6 @@ const logout = async () => {
                             </Link>
                         </li>
                         <li class="nav-item">
-                            <Link class="nav-link" :class="{ active: $page.url.startsWith('/games') }" href="/games">
-                                <i class="fas fa-gamepad me-1"></i> Juegos
-                            </Link>
-                        </li>
-                        <li class="nav-item">
                             <Link class="nav-link"
                                 :class="{ active: $page.url.startsWith('/profile') || $page.url.startsWith('/devices') || $page.url.startsWith('/social-profiles') }"
                                 href="/profile">

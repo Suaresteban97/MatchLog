@@ -69,12 +69,12 @@ class GameService
      * @param User $user
      * @return \Illuminate\Support\Collection
      */
-    public function getUserGames(User $user)
+    public function getUserGames(User $user, int $perPage = 15)
     {
-        // Load the games with their pivot data (user_games)
-        return $user->games()
-            ->with(['genres', 'platforms'])
-            ->get();
+        // Return UserGame models with eager-loaded relations
+        return \App\Models\UserGame::with(['game', 'status', 'platform'])
+            ->where('user_id', $user->id)
+            ->paginate($perPage);
     }
 
     /**

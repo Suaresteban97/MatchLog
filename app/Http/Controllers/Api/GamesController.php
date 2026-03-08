@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Services\GameService;
 use App\Models\Game;
+use App\Models\GameStatus;
+use App\Models\GamePlatform;
 use App\Http\Resources\Games\GameResource;
 use App\Http\Resources\Games\GameDetailResource;
 use App\Http\Requests\Games\StoreGameRequest;
@@ -11,6 +13,7 @@ use App\Http\Requests\Games\UpdateGameRequest;
 use App\Http\Requests\Games\ToggleUserGameRequest;
 use App\Http\Requests\Games\ChangeUserGameStatusRequest;
 use App\Http\Requests\Games\UpdateUserGameRequest;
+use App\Http\Resources\Games\UserGameResource;
 use Illuminate\Http\Request;
 
 class GamesController extends Controller
@@ -40,12 +43,10 @@ class GamesController extends Controller
      */
     public function getUserGames(Request $request)
     {
-        $userGames = $this->gameService->getUserGames($request->user());
+        $perPage = $request->input('per_page', 15);
+        $userGames = $this->gameService->getUserGames($request->user(), $perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => GameResource::collection($userGames)
-        ]);
+        return UserGameResource::collection($userGames);
     }
 
     /**
@@ -145,6 +146,18 @@ class GamesController extends Controller
             'success' => true,
             'message' => 'Datos del juego actualizados correctamente.',
             'data' => $result['data']
+        ]);
+    }
+
+    /**
+     * Get metadata for games (statuses and platforms).
+     * GET /api/games-metadata
+     */
+    public function metadata()
+    {
+        return response()->json([
+            'statuses' => GameStatus::all(),
+            'platforms' => GamePlatform::all()
         ]);
     }
 }
