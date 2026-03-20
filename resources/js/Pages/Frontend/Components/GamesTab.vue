@@ -94,7 +94,7 @@ onMounted(async () => {
         </div>
         <div class="card-body">
             <div class="input-group mb-3">
-                <span class="input-group-text bg-black border-secondary text-primary">
+                <span class="input-group-text bg-transparent border-secondary text-primary">
                     <i class="fas fa-search"></i>
                 </span>
                 <input type="text" v-model="searchQuery" class="form-control bg-black border-secondary text-white"
@@ -267,41 +267,3 @@ onMounted(async () => {
         </div>
     </div>
 </template>
-
-<style scoped>
-.game-card {
-    transition: transform 0.2s;
-}
-
-.game-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--neon-cyan) !important;
-}
-
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 1050;
-    backdrop-filter: blur(5px);
-}
-
-.modal-container {
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-</style>
