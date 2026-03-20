@@ -102,12 +102,13 @@ class GameSessionController extends Controller
 
     /**
      * Leave a game session.
+     * If the user is the host, the entire session is deleted.
      */
     public function leave(Request $request, $id)
     {
         try {
-            $this->sessionService->leaveSession($request->user(), $id);
-            return response()->json(['message' => 'Abandonaste la sesión'], 200);
+            $result = $this->sessionService->leaveSession($request->user(), $id);
+            return response()->json(['message' => $result['message']], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['message' => 'No participas en esta sesión'], 404);
         }
@@ -118,7 +119,8 @@ class GameSessionController extends Controller
      */
     public function browse(Request $request)
     {
-        $sessions = $this->sessionService->browseSessions();
+        $filters = $request->only(['game_id', 'start_date', 'end_date', 'available_only', 'search']);
+        $sessions = $this->sessionService->browseSessions($request->user(), $filters);
         return response()->json($sessions, 200);
     }
 }

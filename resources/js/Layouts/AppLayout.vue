@@ -26,16 +26,17 @@ const logout = async () => {
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <Link class="nav-link" :class="{ active: $page.url.startsWith('/my-space') }"
+                            <Link class="nav-link"
+                                :class="{ active: $page.url.startsWith('/my-space') || $page.url === '/social' }"
                                 href="/my-space">
-                                <i class="fas fa-user-astronaut me-1"></i> Mi Espacio
+                                <i class="fas fa-satellite-dish me-1"></i> Social
                             </Link>
                         </li>
                         <li class="nav-item">
                             <Link class="nav-link"
                                 :class="{ active: $page.url.startsWith('/profile') || $page.url.startsWith('/devices') || $page.url.startsWith('/social-profiles') }"
                                 href="/profile">
-                                <i class="fas fa-cog me-1"></i> Perfil
+                                <i class="fas fa-user me-1"></i> Mi Espacio
                             </Link>
                         </li>
                     </ul>

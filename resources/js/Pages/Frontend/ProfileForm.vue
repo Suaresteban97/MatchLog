@@ -16,7 +16,7 @@ const activeTab = ref('profile');
 
 <template>
 
-    <Head title="Perfil" />
+    <Head title="Mi Espacio" />
 
     <AppLayout v-cloak>
         <div class="row pt-4 justify-content-center">

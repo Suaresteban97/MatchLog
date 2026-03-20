@@ -276,3 +276,107 @@ select.form-select:focus {
     border-bottom: 2px solid var(--neon-blue);
     font-weight: 600;
 }
+
+/* ---- Games Tab ---- */
+.game-card {
+    transition: transform 0.2s;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-cyan) !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1050;
+    backdrop-filter: blur(5px);
+}
+
+/* Fix for inputs and textareas in modal */
+.modal-container input,
+.modal-container textarea,
+.modal-container select {
+    background-color: #000 !important;
+    color: #fff !important;
+    border-color: var(--bs-secondary) !important;
+}
+
+.modal-container input:focus,
+.modal-container textarea:focus,
+.modal-container select:focus {
+    background-color: #000 !important;
+    color: #fff !important;
+    border-color: var(--neon-cyan) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 255, 255, 0.25);
+}
+
+/* Fix for search icon background */
+.input-group-text {
+    background-color: transparent !important;
+}
+
+.modal-container {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ---- Social / Session Cards ---- */
+.session-card {
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.session-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--neon-purple) !important;
+    box-shadow: 0 8px 24px rgba(188, 19, 254, 0.15);
+}
+
+/* Global dark theme utilities */
+.bg-black {
+    background-color: #000000 !important;
+}
+
+.form-control,
+.form-select {
+    color: #ffffff !important;
+}
+
+.form-control::placeholder {
+    color: #6c757d !important;
+}
+
+/* Force dark color scheme for native browser pickers */
+input[type="date"],
+select {
+    color-scheme: dark;
+}
+
+/* Style the calendar picker icon if needed */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Date input dark mode fix for modals */
+.modal-container input[type="date"],
+.modal-container input[type="date"]::-webkit-calendar-picker-indicator {
+    background-color: #000 !important;
+    color: #fff !important;
+}
