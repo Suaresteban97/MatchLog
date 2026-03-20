@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { useSessions } from '../../Composables/useSessions';
@@ -10,7 +10,8 @@ const {
     loading, error, fieldErrors,
     loadAll, loadBrowseSessions, loadMySessions,
     createSession, updateSession, deleteSession,
-    joinSession, leaveSession, resetForm
+    joinSession, leaveSession, resetForm,
+    getMessages, sendMessage
 } = useSessions();
 
 // Load user's own games for the game_id selector
@@ -180,6 +181,65 @@ const spotsLeft = (session) => {
 const onlyParticipating = computed(() =>
     mySessions.participating.filter(s => s.host_id !== authUser.value?.id)
 );
+
+// ===================== CHAT OFFCANVAS STATE =====================
+const showChat = ref(false);
+const currentChatSession = ref(null);
+const chatMessages = ref([]);
+const newMessage = ref('');
+const chatContainer = ref(null);
+
+const scrollToBottom = async () => {
+    await nextTick();
+    if (chatContainer.value) {
+        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    }
+};
+
+const openChat = async (session) => {
+    currentChatSession.value = session;
+    showChat.value = true;
+    chatMessages.value = await getMessages(session.id);
+    scrollToBottom();
+
+    // Listen to Reverb WebSocket
+    if (window.Echo) {
+        window.Echo.join(`session.${session.id}`)
+            .listen('MessageSent', (e) => {
+                const exists = chatMessages.value.some(m => m.id === e.id);
+                if (!exists) {
+                    chatMessages.value.push(e);
+                    scrollToBottom();
+                }
+            });
+    }
+};
+
+const closeChat = () => {
+    if (currentChatSession.value && window.Echo) {
+        window.Echo.leave(`session.${currentChatSession.value.id}`);
+    }
+    showChat.value = false;
+    currentChatSession.value = null;
+    chatMessages.value = [];
+    newMessage.value = '';
+};
+
+const submitMessage = async () => {
+    if (!newMessage.value.trim() || !currentChatSession.value) return;
+    const text = newMessage.value;
+    newMessage.value = ''; // clear input immediately 
+    try {
+        const savedMsg = await sendMessage(currentChatSession.value.id, text);
+        const exists = chatMessages.value.some(m => m.id === savedMsg.id);
+        if (!exists) {
+            chatMessages.value.push(savedMsg);
+            scrollToBottom();
+        }
+    } catch (err) {
+        console.error("Failed to send message", err);
+    }
+};
 
 onMounted(() => {
     loadMyGames();
@@ -389,6 +449,10 @@ onMounted(() => {
                                                 s.max_participants }}</span>
                                         </td>
                                         <td class="text-end">
+                                            <button @click="openChat(s)" class="btn btn-sm btn-outline-info me-2"
+                                                title="Chat de la Sesión">
+                                                <i class="fas fa-comment-dots"></i>
+                                            </button>
                                             <button @click="openEditModal(s)"
                                                 class="btn btn-sm btn-outline-primary me-2">
                                                 <i class="fas fa-edit"></i>
@@ -436,6 +500,10 @@ onMounted(() => {
                                         </td>
                                         <td class="text-muted small">{{ formatDate(s.start_time) }}</td>
                                         <td class="text-end">
+                                            <button @click="openChat(s)" class="btn btn-sm btn-outline-info me-2"
+                                                title="Chat de la Sesión">
+                                                <i class="fas fa-comment-dots"></i>
+                                            </button>
                                             <button @click="handleLeave(s.id, s)" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-sign-out-alt me-1"></i>Abandonar
                                             </button>
@@ -560,6 +628,59 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+
+        <!-- ===================== OFFCANVAS CHAT ===================== -->
+        <div class="offcanvas offcanvas-end bg-dark border-start border-secondary text-white shadow-lg" tabindex="-1"
+            :class="{ 'show': showChat }" :style="{ visibility: showChat ? 'visible' : 'hidden', zIndex: 1060 }"
+            style="width: 400px; max-width: 100vw;">
+
+            <div class="offcanvas-header border-bottom border-secondary bg-black">
+                <h5 class="offcanvas-title fw-bold text-white mb-0">
+                    <i class="fas fa-comment-dots me-2 text-info"></i>
+                    Chat: {{ currentChatSession?.title }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @click="closeChat"></button>
+            </div>
+
+            <div class="offcanvas-body d-flex flex-column p-0" style="background: var(--bg-card); overflow: hidden;">
+                <!-- Messages Area -->
+                <div class="flex-grow-1 p-3" style="overflow-y: auto;" ref="chatContainer">
+                    <div v-if="chatMessages.length === 0" class="text-center text-muted my-5 small">
+                        <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                        <p>No hay mensajes en esta sesión. ¡Sé el primero en escribir!</p>
+                    </div>
+
+                    <div v-for="msg in chatMessages" :key="msg.id" class="mb-3">
+                        <div class="d-flex flex-column"
+                            :class="msg.user?.id === authUser?.id ? 'align-items-end' : 'align-items-start'">
+                            <span class="small text-muted mb-1" style="font-size: 0.75rem;">
+                                {{ msg.user?.name }} • {{ new
+                                    Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                            </span>
+                            <div class="p-2 rounded"
+                                :class="msg.user?.id === authUser?.id ? 'bg-primary text-black' : 'bg-black border border-secondary text-white'"
+                                style="max-width: 85%; word-break: break-word; font-size: 0.9rem;">
+                                {{ msg.message }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-3 border-top border-secondary bg-black">
+                    <form @submit.prevent="submitMessage" class="input-group">
+                        <input type="text" v-model="newMessage" class="form-control bg-dark text-white border-secondary"
+                            placeholder="Escribe un mensaje..." required>
+                        <button class="btn btn-info" type="submit">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Backdrop -->
+        <div v-if="showChat" class="modal-backdrop fade show" @click="closeChat" style="z-index: 1055;"></div>
 
     </AppLayout>
 </template>

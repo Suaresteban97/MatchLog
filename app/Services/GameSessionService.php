@@ -182,7 +182,6 @@ class GameSessionService
                 $q->where('title', 'like', $search)
                     ->orWhereHas('host', function ($hq) use ($search) {
                         $hq->where('name', 'like', $search)
-                            ->orWhere('nickname', 'like', $search)
                             ->orWhere('email', 'like', $search);
                     });
             });

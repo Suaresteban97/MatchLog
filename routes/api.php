@@ -91,6 +91,10 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::post('/sessions/{id}/leave', [GameSessionController::class, 'leave']);
     Route::apiResource('sessions', GameSessionController::class);
 
+    // Chat endpoints
+    Route::get('/sessions/{id}/messages', [App\Http\Controllers\Api\GameSessionChatController::class, 'index']);
+    Route::post('/sessions/{id}/messages', [App\Http\Controllers\Api\GameSessionChatController::class, 'store']);
+
     /**
      * Execution Platforms
      */
