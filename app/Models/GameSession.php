@@ -37,4 +37,9 @@ class GameSession extends Model
     {
         return $this->belongsTo(Game::class);
     }
+
+    public function messages()
+    {
+        return $this->hasMany(GameSessionMessage::class, 'session_id');
+    }
 }

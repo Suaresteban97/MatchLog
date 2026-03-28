@@ -130,6 +130,26 @@ export function useSessions() {
         };
     };
 
+    const getMessages = async (sessionId, page = 1) => {
+        try {
+            const response = await get(`/sessions/${sessionId}/messages?page=${page}`, {}, true);
+            return response || { data: [], current_page: 1, last_page: 1 };
+        } catch (err) {
+            console.error('Error loading messages:', err);
+            return { data: [], current_page: 1, last_page: 1 };
+        }
+    };
+
+    const sendMessage = async (sessionId, messageText) => {
+        try {
+            const response = await post(`/sessions/${sessionId}/messages`, { message: messageText }, {}, true);
+            return response;
+        } catch (err) {
+            console.error('Error sending message:', err);
+            throw err;
+        }
+    };
+
     return {
         browseSessions,
         mySessions,
@@ -145,6 +165,8 @@ export function useSessions() {
         deleteSession,
         joinSession,
         leaveSession,
-        resetForm
+        resetForm,
+        getMessages,
+        sendMessage
     };
 }

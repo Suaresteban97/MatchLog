@@ -12,7 +12,6 @@ services:
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
     networks:
       - backlog-network
     depends_on:
@@ -85,6 +84,31 @@ services:
       - db
       - redis
     command: php artisan queue:work --verbose --tries=3 --timeout=90
+    networks:
+      - backlog-network
+
+  # WebSockets Server (Reverb)
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        user: www-data
+        uid: 1000
+    container_name: backlog-reverb
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    entrypoint: []
+    depends_on:
+      - db
+      - redis
+    # Por defecto Reverb corre en 8080.
+    # Como Nginx ya tiene el 8080 del host, mapeamos a 8020 en el host.
+    ports:
+      - "8020:8080"
+    command: php artisan reverb:start --host="0.0.0.0" --port=8080
     networks:
       - backlog-network
 

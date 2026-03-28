@@ -30,9 +30,11 @@ export function useApi() {
         return data;
     };
 
-    const request = async (method, endpoint, body = null, customHeaders = {}) => {
-        loading.value = true;
-        error.value = null;
+    const request = async (method, endpoint, body = null, customHeaders = {}, silent = false) => {
+        if (!silent) {
+            loading.value = true;
+            error.value = null;
+        }
 
         try {
             const options = {
@@ -48,17 +50,21 @@ export function useApi() {
             const response = await fetch(`${API_URL}${endpoint}`, options);
             return await handleResponse(response);
         } catch (err) {
-            error.value = err.message || err.error || 'Error en la petición';
+            if (!silent) {
+                error.value = err.message || err.error || 'Error en la petición';
+            }
             throw err;
         } finally {
-            loading.value = false;
+            if (!silent) {
+                loading.value = false;
+            }
         }
     };
 
-    const get = (endpoint, headers = {}) => request('GET', endpoint, null, headers);
-    const post = (endpoint, body, headers = {}) => request('POST', endpoint, body, headers);
-    const put = (endpoint, body, headers = {}) => request('PUT', endpoint, body, headers);
-    const del = (endpoint, headers = {}) => request('DELETE', endpoint, null, headers);
+    const get = (endpoint, headers = {}, silent = false) => request('GET', endpoint, null, headers, silent);
+    const post = (endpoint, body, headers = {}, silent = false) => request('POST', endpoint, body, headers, silent);
+    const put = (endpoint, body, headers = {}, silent = false) => request('PUT', endpoint, body, headers, silent);
+    const del = (endpoint, headers = {}, silent = false) => request('DELETE', endpoint, null, headers, silent);
 
     return {
         get,

@@ -16,14 +16,15 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Limpiar el caché de configuración para que reconozca cambios en el .env y Redis
 echo "Limpiando caché de Laravel..."
-php artisan config:clear
+php artisan config:clear || true
+php artisan cache:clear || true
 
 # echo "Optimizando rutas..."
-php artisan route:cache
+# php artisan route:cache || true
 
 # En desarrollo, NO cacheamos configuración ni vistas para ver cambios al instante
-php artisan config:cache
-php artisan view:cache
+# php artisan config:cache || true
+# php artisan view:cache || true
 
 # Luego el resto de tus comandos...
 exec "$@"
