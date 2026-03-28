@@ -20,8 +20,8 @@ class GameSessionChatController extends Controller
         $this->authorizeAccess($request->user(), $session);
 
         $messages = $session->messages()->with('user:id,name,email')
-            ->orderBy('created_at', 'asc')
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->paginate(30);
 
         return response()->json($messages);
     }
