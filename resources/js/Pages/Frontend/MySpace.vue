@@ -208,26 +208,26 @@ const handleChatScroll = (e) => {
 
 const loadMoreMessages = async () => {
     if (isChatLoadingMore.value || chatCurrentPage.value >= chatLastPage.value || !currentChatSession.value) return;
-    
+
     isChatLoadingMore.value = true;
     const nextPage = chatCurrentPage.value + 1;
-    
+
     try {
         const response = await getMessages(currentChatSession.value.id, nextPage);
         if (response && response.data) {
             const olderMessages = response.data.reverse();
-            
+
             // Save current scroll height to restore position
             const container = chatContainer.value;
             const previousScrollHeight = container ? container.scrollHeight : 0;
-            
+
             chatMessages.value = [...olderMessages, ...chatMessages.value];
             chatCurrentPage.value = response.current_page;
-            
+
             // Restore scroll position so it doesn't jump
             await nextTick();
             if (container) {
-                 container.scrollTop = container.scrollHeight - previousScrollHeight;
+                container.scrollTop = container.scrollHeight - previousScrollHeight;
             }
         }
     } catch (err) {
@@ -245,7 +245,7 @@ const groupedChatMessages = computed(() => {
     chatMessages.value.forEach(msg => {
         const dateObj = new Date(msg.created_at);
         const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
+
         if (dateStr !== currentDate) {
             currentDate = dateStr;
             currentGroup = {
@@ -265,12 +265,13 @@ const openChat = async (session) => {
     showChat.value = true;
     chatCurrentPage.value = 1;
     chatLastPage.value = 1;
-    
+
     const response = await getMessages(session.id, 1);
+
     chatMessages.value = response.data ? response.data.reverse() : [];
     chatCurrentPage.value = response.current_page || 1;
     chatLastPage.value = response.last_page || 1;
-    
+
     scrollToBottom();
 
     // Listen to Reverb WebSocket
@@ -722,7 +723,8 @@ onMounted(() => {
                         <span class="spinner-border spinner-border-sm text-info"></span>
                     </div>
 
-                    <div v-if="chatMessages.length === 0 && !isChatLoadingMore" class="text-center text-muted my-5 small">
+                    <div v-if="chatMessages.length === 0 && !isChatLoadingMore"
+                        class="text-center text-muted my-5 small">
                         <i class="fas fa-comment-slash fa-2x mb-2"></i>
                         <p>No hay mensajes en esta sesión. ¡Sé el primero en escribir!</p>
                     </div>
@@ -730,8 +732,8 @@ onMounted(() => {
                     <template v-for="(group, gIndex) in groupedChatMessages" :key="'group-' + gIndex">
                         <div class="position-relative text-center my-4">
                             <hr class="border-secondary mb-0" style="opacity: 0.3;">
-                            <span class="badge bg-dark border border-secondary text-muted position-absolute px-3 py-2" 
-                                  style="top: 50%; left: 50%; transform: translate(-50%, -50%); text-transform: capitalize;">
+                            <span class="badge bg-dark border border-secondary text-muted position-absolute px-3 py-2"
+                                style="top: 50%; left: 50%; transform: translate(-50%, -50%); text-transform: capitalize;">
                                 {{ group.date }}
                             </span>
                         </div>
@@ -741,7 +743,8 @@ onMounted(() => {
                                 :class="msg.user?.id === authUser?.id ? 'align-items-end' : 'align-items-start'">
                                 <span class="small text-muted mb-1" style="font-size: 0.75rem;">
                                     {{ msg.user?.name }} • {{ new
-                                        Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                                        Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    }}
                                 </span>
                                 <div class="p-2 rounded"
                                     :class="msg.user?.id === authUser?.id ? 'bg-primary text-black' : 'bg-black border border-secondary text-white'"
