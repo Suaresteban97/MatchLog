@@ -12,14 +12,25 @@
         <!-- Font Awesome -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-        <!-- Google Fonts: Ysabeau Infant -->
+        <!-- Google Fonts: Ysabeau Infant & Playfair Display -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Ysabeau+Infant:wght@100;500&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Ysabeau+Infant:wght@100;500&display=swap" rel="stylesheet">
 
         <!-- Global Tokens -->
         <script>
             window.ADMIN_TOKEN = "{{ config('app.admin_token') }}";
+        </script>
+
+        <!-- Theme check script to prevent FOUC -->
+        <script>
+            (function() {
+                var theme = document.cookie.match(/(^|;\s*)theme=([^;]*)/);
+                var isVintage = theme ? theme[2] === 'vintage' : false;
+                if (isVintage) {
+                    document.documentElement.classList.add('theme-vintage');
+                }
+            })();
         </script>
 
         <!-- Scripts -->

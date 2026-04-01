@@ -1,4 +1,5 @@
 :root {
+    /* Cyberpunk Default Variables */
     --bg-dark: #09090b;
     --bg-card: #121217;
     --neon-purple: #bc13fe;
@@ -7,35 +8,142 @@
     --text-main: #ffffff;
     --text-muted: #a1a1aa;
     --border-color: #27272a;
+    --body-bg-gradient: radial-gradient(circle at 15% 50%, rgba(188, 19, 254, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(15, 240, 252, 0.08), transparent 25%);
+    --font-family-base: 'Ysabeau Infant', sans-serif;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+.theme-vintage {
+    /* Vintage Theme Variables */
+    --bg-dark: #f4ebd8; /* Off-white, parchment backgoud */
+    --bg-card: #eadebc; /* slightly darker old paper */
+    --neon-purple: #8b4513; /* Brown/Sepia accent */
+    --neon-blue: #2c3e50; /* Deep blue/ink accent */
+    --neon-pink: #a52a2a; /* Dark red/vintage accent */
+    --text-main: #2b2b2b; /* Dark text */
+    --text-muted: #5e5e5e; /* Softer dark text */
+    --border-color: #d1bfae; /* Old border */
+    --body-bg-gradient: none;
+    --font-family-base: 'Playfair Display', serif;
+    --shadow-color: rgba(139, 69, 19, 0.15); /* Soft sepia shadow */
+}
+
+/* Vintage specific overrides for hardcoded bootstrap classes or effects */
+.theme-vintage .navbar-brand,
+.theme-vintage .nav-link,
+.theme-vintage .nav-link:hover,
+.theme-vintage .nav-link.active,
+.theme-vintage .login-container h2 {
+    text-shadow: none !important;
+}
+
+.theme-vintage .nav-link {
+    color: var(--text-muted) !important;
+}
+
+.theme-vintage .navbar-brand,
+.theme-vintage .nav-link:hover,
+.theme-vintage .nav-link.active {
+    color: var(--text-main) !important;
+}
+
+.theme-vintage .text-white {
+    color: var(--text-main) !important;
+}
+
+.theme-vintage .text-muted,
+.theme-vintage .text-secondary {
+    color: var(--text-muted) !important;
+}
+
+.theme-vintage .bg-black {
+    background-color: var(--bg-dark) !important;
+}
+
+.theme-vintage .bg-dark {
+    background-color: var(--bg-card) !important;
+}
+
+.theme-vintage input[type="date"],
+.theme-vintage select,
+.theme-vintage .form-control,
+.theme-vintage .form-select {
+    color-scheme: light !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+.theme-vintage .form-control::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.theme-vintage input[type="date"]::-webkit-calendar-picker-indicator,
+.theme-vintage .modal-container input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: none !important;
+}
+
+.theme-vintage .btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(50%) !important;
+}
+
+/* Fix navbar background being black in Vintage mode */
+.theme-vintage #main-navbar {
+    background: rgba(234, 222, 188, 0.9) !important; /* light parchment color */
+    box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
+}
+
+/* Overriding Bootstrap's dark table hardcoded colors */
+.theme-vintage .table-dark {
+    --bs-table-bg: var(--bg-card);
+    --bs-table-color: var(--text-main);
+    --bs-table-border-color: var(--border-color);
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+.theme-vintage .table-dark th,
+.theme-vintage .table-dark td {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+.theme-vintage .table-dark.table-hover > tbody > tr:hover > * {
+    background-color: var(--bg-dark) !important;
+    box-shadow: inset 0 0 0 9999px var(--bg-dark) !important;
+    color: var(--text-main) !important;
 }
 
 body {
     background-color: var(--bg-dark);
     color: var(--text-main);
-    font-family: 'Ysabeau Infant', sans-serif;
+    font-family: var(--font-family-base);
     display: block;
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
-    background-image:
-        radial-gradient(circle at 15% 50%, rgba(188, 19, 254, 0.08), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(15, 240, 252, 0.08), transparent 25%);
+    background-image: var(--body-bg-gradient);
     background-attachment: fixed;
     background-size: cover;
+    transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 select.form-select,
 select.form-select option {
     background-color: var(--bg-card) !important;
-    color: white !important;
+    color: var(--text-main) !important;
     border-color: var(--border-color);
 }
 
 select.form-select:focus {
     background-color: var(--bg-card) !important;
-    color: white !important;
+    color: var(--text-main) !important;
     box-shadow: 0 0 0 0.25rem rgba(188, 19, 254, 0.25);
     border-color: var(--neon-purple);
+}
+
+.theme-vintage select.form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(139, 69, 19, 0.25);
 }
 
 /* Navbar Cyberpunk Style */
@@ -194,9 +302,10 @@ select.form-select:focus {
 .input-group input:-webkit-autofill:hover,
 .input-group input:-webkit-autofill:focus,
 .input-group input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #121217 inset !important;
+    background-color: transparent !important;
+    -webkit-box-shadow: 0 0 0 30px var(--bg-card) inset !important;
     /* Match card bg */
-    -webkit-text-fill-color: white !important;
+    -webkit-text-fill-color: var(--text-main) !important;
     transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -302,16 +411,16 @@ select.form-select:focus {
 .modal-container input,
 .modal-container textarea,
 .modal-container select {
-    background-color: #000 !important;
-    color: #fff !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
     border-color: var(--bs-secondary) !important;
 }
 
 .modal-container input:focus,
 .modal-container textarea:focus,
 .modal-container select:focus {
-    background-color: #000 !important;
-    color: #fff !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
     border-color: var(--neon-cyan) !important;
     box-shadow: 0 0 0 0.25rem rgba(0, 255, 255, 0.25);
 }
@@ -355,11 +464,11 @@ select.form-select:focus {
 
 .form-control,
 .form-select {
-    color: #ffffff !important;
+    color: var(--text-main) !important;
 }
 
 .form-control::placeholder {
-    color: #6c757d !important;
+    color: var(--text-muted) !important;
 }
 
 /* Force dark color scheme for native browser pickers */
@@ -375,8 +484,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Date input dark mode fix for modals */
-.modal-container input[type="date"],
-.modal-container input[type="date"]::-webkit-calendar-picker-indicator {
-    background-color: #000 !important;
-    color: #fff !important;
+.modal-container input[type="date"] {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
 }
