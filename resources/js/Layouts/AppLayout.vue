@@ -1,8 +1,27 @@
 <script setup>
 import { Link, router } from '@inertiajs/vue3';
 import { useApi } from '../Composables/useApi';
+import { ref, onMounted } from 'vue';
 
 const { post } = useApi();
+
+const isVintage = ref(false);
+
+const toggleTheme = () => {
+    isVintage.value = !isVintage.value;
+    if (isVintage.value) {
+        document.documentElement.classList.add('theme-vintage');
+        document.cookie = "theme=vintage; max-age=31536000; path=/";
+    } else {
+        document.documentElement.classList.remove('theme-vintage');
+        document.cookie = "theme=cyberpunk; max-age=31536000; path=/";
+    }
+};
+
+onMounted(() => {
+    // Check if the script in app.blade.php already applied the class
+    isVintage.value = document.documentElement.classList.contains('theme-vintage');
+});
 
 const logout = async () => {
     try {
@@ -40,7 +59,12 @@ const logout = async () => {
                             </Link>
                         </li>
                     </ul>
-                    <div class="d-flex">
+                    <div class="d-flex align-items-center">
+                        <!-- Theme Toggle Button -->
+                        <button @click="toggleTheme" class="btn btn-sm btn-outline-secondary me-3 border-0" :title="isVintage ? 'Volver a Cyberpunk' : 'Modo Vintage (Clásico)'">
+                            <i :class="isVintage ? 'fas fa-desktop' : 'fas fa-book-open'" style="font-size: 1.2rem;"></i>
+                        </button>
+                        
                         <button @click="logout" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
                     </div>
                 </div>
