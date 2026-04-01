@@ -18,7 +18,7 @@ class GameService
      */
     public function getGames(array $filters = [], int $perPage = 15)
     {
-        $query = Game::query();
+        $query = Game::with('genres');
 
         // Filter by name
         if (!empty($filters['name'])) {
@@ -78,14 +78,22 @@ class GameService
     }
 
     /**
-     * Get a single game with all relationships.
+     * Get a single game with all relationships by numeric ID or slug.
      *
-     * @param int $gameId
+     * @param int|string $identifier
      * @return Game
      */
-    public function getGameWithRelations(int $gameId): Game
+    public function getGameWithRelations($identifier): Game
     {
-        return Game::with(['genres', 'platforms', 'userGames.status', 'userGames.platform'])->findOrFail($gameId);
+        $query = Game::with(['genres', 'platforms', 'userGames.status', 'userGames.platform']);
+
+        if (is_numeric($identifier)) {
+            $query->where('id', $identifier);
+        } else {
+            $query->where('slug', $identifier);
+        }
+
+        return $query->firstOrFail();
     }
 
     /**

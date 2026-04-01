@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Str;
 
 class Game extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'cover_image_url',
         'release_date',
@@ -31,6 +33,23 @@ class Game extends Model
         'is_local_multiplayer' => 'boolean',
         'is_cooperative' => 'boolean',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($game) {
+            if (empty($game->slug)) {
+                $baseSlug = Str::slug($game->name);
+                $slug = $baseSlug;
+                $count = 1;
+                while (static::where('slug', $slug)->where('id', '!=', $game->id)->exists()) {
+                    $slug = $baseSlug . '-' . $count++;
+                }
+                $game->slug = $slug;
+            }
+        });
+    }
 
     /**
      * Get the game sessions for this game.
