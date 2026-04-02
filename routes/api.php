@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\GameSessionController;
 use App\Http\Controllers\Api\ExecutionPlatformController;
 use App\Http\Controllers\Api\SocialProfileController;
 use App\Http\Controllers\Api\GamesController;
+use App\Http\Controllers\Api\RawgController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -30,6 +31,12 @@ Route::middleware([AdminMiddleware::class])->group(function () {
      */
     Route::post('games', [GamesController::class, 'store']);
     Route::put('games/{game}', [GamesController::class, 'update']);
+
+    /**
+     * RAWG API sync (Admin only)
+     */
+    Route::post('/admin/rawg/sync-list', [RawgController::class, 'syncList']);
+    Route::post('/admin/rawg/sync-detail/{slug}', [RawgController::class, 'syncDetail']);
 });
 
 //Métodos de recuperación de contraseña

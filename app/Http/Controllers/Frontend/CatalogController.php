@@ -25,15 +25,21 @@ class CatalogController extends Controller
         $perPage = $request->input('per_page', 24);
         $paginator = $this->gameService->getGames($request->all(), $perPage);
 
-        // Convert paginator items using the Resource, keeping the paginator structure
-        // Since Inertia handles the top level array, we can use Laravel's built in array casting
         $gamesData = GameResource::collection($paginator)->response()->getData(true);
+
+        $filterKeys = [
+            'name', 'genre_id', 'platform_id', 'platform',
+            'developer', 'publisher', 'release_year',
+            'metacritic_score', 'sort_by', 'sort_dir',
+            'is_multiplayer', 'is_cooperative',
+            'is_online_multiplayer', 'is_local_multiplayer',
+        ];
 
         return Inertia::render('Frontend/Games/Index', [
             'initialGames' => $gamesData,
-            'filters' => $request->only(['name', 'genre_id', 'platform', 'metacritic_score']),
-            'genres' => Genre::orderBy('name')->get(),
-            'platforms' => GamePlatform::orderBy('name')->get()
+            'filters'      => $request->only($filterKeys),
+            'genres'       => Genre::orderBy('name')->get(['id', 'name']),
+            'platforms'    => GamePlatform::orderBy('name')->get(['id', 'name']),
         ]);
     }
 

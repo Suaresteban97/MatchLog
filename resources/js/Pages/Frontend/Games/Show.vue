@@ -4,11 +4,15 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '../../../Layouts/AppLayout.vue';
 import axios from 'axios';
 
-const props = defineProps({
-    game: Object
-});
+const props = defineProps({ game: Object });
 
 const gameData = computed(() => props.game.data || props.game);
+const screenshots = computed(() => gameData.value.screenshots || []);
+
+// Lightbox
+const lightboxImg = ref(null);
+const openLightbox = (url) => { lightboxImg.value = url; };
+const closeLightbox = () => { lightboxImg.value = null; };
 
 const showAddedSuccess = ref(false);
 const isAdding = ref(false);
@@ -17,16 +21,11 @@ const addToLibrary = async () => {
     isAdding.value = true;
     try {
         const res = await axios.post(`/api/my-games/${gameData.value.id}/toggle`, {
-            // Using backlog as default status if available, backend handles fallback
-            game_status_id: 1 // Backlog ID or backend default
+            game_status_id: 1
         });
         if (res.data.success) {
             showAddedSuccess.value = true;
             setTimeout(() => showAddedSuccess.value = false, 3000);
-
-            // If the user unlinks it unexpectedly, we might want to handle text change, 
-            // but this is an initial "Add" button design. 
-            // The API response returns action: 'linked' or 'unlinked'.
         }
     } catch (e) {
         console.error("Error toggling game", e);
@@ -182,7 +181,32 @@ const formatDate = (dateStr) => {
             </div>
 
         </div>
+
+        <!-- ══════ SCREENSHOT GALLERY ══════ -->
+        <div v-if="screenshots.length > 0" class="mt-5 pb-5 mb-4">
+            <h5 class="text-white border-bottom border-secondary pb-2 mb-4">
+                <i class="fas fa-images me-2 text-primary"></i>Capturas de Pantalla
+            </h5>
+            <div class="screenshot-grid">
+                <div v-for="shot in screenshots" :key="shot.id" class="screenshot-thumb"
+                    @click="openLightbox(shot.image_url)">
+                    <img :src="shot.image_url" :alt="gameData.name" loading="lazy">
+                    <div class="thumb-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+            </div>
+        </div>
+
     </AppLayout>
+
+    <!-- ══════ LIGHTBOX ══════ -->
+    <Teleport to="body">
+        <div v-if="lightboxImg" class="lightbox" @click.self="closeLightbox">
+            <button class="lightbox-close" @click="closeLightbox">
+                <i class="fas fa-times"></i>
+            </button>
+            <img :src="lightboxImg" class="lightbox-img" alt="Screenshot">
+        </div>
+    </Teleport>
 </template>
 
 <style scoped>
@@ -194,6 +218,111 @@ const formatDate = (dateStr) => {
     .display-5 {
         font-size: 2rem;
         line-height: 1.2;
+    }
+}
+
+/* ── Screenshot grid ─────────────────────────── */
+.screenshot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: .75rem;
+}
+
+.screenshot-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.screenshot-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    opacity: 0;
+    transition: opacity .25s ease;
+}
+
+.screenshot-thumb:hover img {
+    transform: scale(1.07);
+}
+
+.screenshot-thumb:hover .thumb-overlay {
+    opacity: 1;
+}
+
+.screenshot-thumb:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(188, 19, 254, .25);
+    border-color: var(--neon-purple);
+}
+
+/* ── Lightbox ────────────────────────────────── */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+    backdrop-filter: blur(6px);
+    animation: fadeIn .2s ease;
+}
+
+.lightbox-img {
+    max-width: 92vw;
+    max-height: 88vh;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 0 60px rgba(0, 0, 0, .8);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.4rem;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s;
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 255, 255, .25);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
     }
 }
 </style>

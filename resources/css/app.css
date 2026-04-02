@@ -15,17 +15,26 @@
 
 .theme-vintage {
     /* Vintage Theme Variables */
-    --bg-dark: #f4ebd8; /* Off-white, parchment backgoud */
-    --bg-card: #eadebc; /* slightly darker old paper */
-    --neon-purple: #8b4513; /* Brown/Sepia accent */
-    --neon-blue: #2c3e50; /* Deep blue/ink accent */
-    --neon-pink: #a52a2a; /* Dark red/vintage accent */
-    --text-main: #2b2b2b; /* Dark text */
-    --text-muted: #5e5e5e; /* Softer dark text */
-    --border-color: #d1bfae; /* Old border */
+    --bg-dark: #f4ebd8;
+    /* Off-white, parchment backgoud */
+    --bg-card: #eadebc;
+    /* slightly darker old paper */
+    --neon-purple: #8b4513;
+    /* Brown/Sepia accent */
+    --neon-blue: #2c3e50;
+    /* Deep blue/ink accent */
+    --neon-pink: #a52a2a;
+    /* Dark red/vintage accent */
+    --text-main: #2b2b2b;
+    /* Dark text */
+    --text-muted: #5e5e5e;
+    /* Softer dark text */
+    --border-color: #d1bfae;
+    /* Old border */
     --body-bg-gradient: none;
     --font-family-base: 'Playfair Display', serif;
-    --shadow-color: rgba(139, 69, 19, 0.15); /* Soft sepia shadow */
+    --shadow-color: rgba(139, 69, 19, 0.15);
+    /* Soft sepia shadow */
 }
 
 /* Vintage specific overrides for hardcoded bootstrap classes or effects */
@@ -88,7 +97,8 @@
 
 /* Fix navbar background being black in Vintage mode */
 .theme-vintage #main-navbar {
-    background: rgba(234, 222, 188, 0.9) !important; /* light parchment color */
+    background: rgba(234, 222, 188, 0.9) !important;
+    /* light parchment color */
     box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
 }
 
@@ -108,7 +118,7 @@
     border-color: var(--border-color) !important;
 }
 
-.theme-vintage .table-dark.table-hover > tbody > tr:hover > * {
+.theme-vintage .table-dark.table-hover>tbody>tr:hover>* {
     background-color: var(--bg-dark) !important;
     box-shadow: inset 0 0 0 9999px var(--bg-dark) !important;
     color: var(--text-main) !important;
@@ -487,4 +497,96 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .modal-container input[type="date"] {
     background-color: var(--bg-card) !important;
     color: var(--text-main) !important;
+}
+
+.game-cover-card {
+    aspect-ratio: 3 / 4;
+    transition: transform .3s ease, box-shadow .3s ease;
+    cursor: pointer;
+}
+
+/* The cover image fills the card while KEEPING its ratio (no stretching) */
+.cover-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* crops, never stretches */
+    object-position: center top;
+    /* show the top portion (title/character) */
+    transition: transform .4s ease;
+}
+
+.no-cover {
+    background: var(--bg-card);
+}
+
+/* Always-visible name strip at the bottom */
+.card-name-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: .45rem .6rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, .88) 0%, transparent 100%);
+    z-index: 2;
+    transition: opacity .3s ease;
+}
+
+.card-name-text {
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 600;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, .9);
+}
+
+/* Hover overlay with genre chips + button (slides up) */
+.game-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, .95) 0%, rgba(0, 0, 0, .55) 45%, transparent 100%);
+    color: #fff;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .3s ease, transform .3s ease;
+    z-index: 3;
+}
+
+/* On hover: scale image, show overlay, hide name bar, lift card */
+.game-cover-card:hover .cover-img {
+    transform: scale(1.06);
+}
+
+.game-cover-card:hover .game-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.game-cover-card:hover .card-name-bar {
+    opacity: 0;
+}
+
+.game-cover-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(188, 19, 254, .3) !important;
+    border-color: var(--neon-purple) !important;
+}
+
+.theme-vintage .game-cover-card:hover {
+    box-shadow: 0 12px 28px rgba(139, 69, 19, .3) !important;
+    border-color: var(--neon-purple) !important;
+}
+
+/* Active pagination */
+.page-item.active .page-link {
+    background-color: var(--neon-purple);
+    border-color: var(--neon-purple);
+    color: #fff;
 }

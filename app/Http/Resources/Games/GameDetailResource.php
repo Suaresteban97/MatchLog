@@ -59,6 +59,19 @@ class GameDetailResource extends JsonResource
                 ])
             ),
 
+            // Screenshots (gallery images, excludes the cover at rawg_id=-1)
+            'screenshots' => $this->whenLoaded(
+                'screenshots',
+                fn() => $this->screenshots
+                    ->where('is_cover', false)
+                    ->sortBy('id')
+                    ->values()
+                    ->map(fn($s) => [
+                        'id'        => $s->id,
+                        'image_url' => $s->image_url,
+                    ])
+            ),
+
             // User's library entry for this game (null if not in their library)
             'user_game' => $userGame ? [
                 'status' => $userGame->status ? [

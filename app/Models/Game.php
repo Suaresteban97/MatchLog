@@ -102,4 +102,12 @@ class Game extends Model
     {
         return $this->hasMany(UserGame::class);
     }
+
+    /**
+     * Screenshots stored from RAWG sync.
+     */
+    public function screenshots(): HasMany
+    {
+        return $this->hasMany(GameScreenshot::class);
+    }
 }
