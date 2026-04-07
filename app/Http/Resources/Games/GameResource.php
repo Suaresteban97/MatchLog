@@ -16,9 +16,13 @@ class GameResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'slug' => $this->slug,
             'name' => $this->name,
             'cover_image_url' => $this->cover_image_url,
             'metacritic_score' => $this->metacritic_score,
+            'genres' => $this->whenLoaded('genres', function () {
+                return $this->genres->pluck('name');
+            }, []),
         ];
     }
 }

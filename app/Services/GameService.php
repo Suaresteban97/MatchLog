@@ -18,7 +18,7 @@ class GameService
      */
     public function getGames(array $filters = [], int $perPage = 15)
     {
-        $query = Game::query();
+        $query = Game::with('genres');
 
         // Filter by name
         if (!empty($filters['name'])) {
@@ -35,32 +35,68 @@ class GameService
             $query->where('publisher', 'like', '%' . $filters['publisher'] . '%');
         }
 
-        // Filter by release_date
-        if (!empty($filters['release_date'])) {
-            // Could be a specific year or exact date
-            $query->whereDate('release_date', '>=', $filters['release_date']);
+        // Filter by year (release_year)
+        if (!empty($filters['release_year'])) {
+            $query->whereYear('release_date', $filters['release_year']);
         }
 
-        // Filter by metacritic_score
+        // Filter by min metacritic score
         if (!empty($filters['metacritic_score'])) {
-            $query->where('metacritic_score', '>=', $filters['metacritic_score']);
+            $query->where('metacritic_score', '>=', (int) $filters['metacritic_score']);
         }
 
-        // Filter by genre
+        // Filter by genre id
         if (!empty($filters['genre_id'])) {
             $query->whereHas('genres', function ($q) use ($filters) {
                 $q->where('genres.id', $filters['genre_id']);
             });
         }
 
-        // Filter by platform name
+        // Filter by platform id
+        if (!empty($filters['platform_id'])) {
+            $query->whereHas('platforms', function ($q) use ($filters) {
+                $q->where('game_platforms.id', $filters['platform_id']);
+            });
+        }
+
+        // Filter by platform name (legacy / search string)
         if (!empty($filters['platform'])) {
             $query->whereHas('platforms', function ($q) use ($filters) {
                 $q->where('game_platforms.name', 'like', '%' . $filters['platform'] . '%');
             });
         }
 
-        return $query->paginate($perPage);
+        // Boolean capability filters
+        if (!empty($filters['is_multiplayer'])) {
+            $query->where('is_multiplayer', true);
+        }
+        if (!empty($filters['is_cooperative'])) {
+            $query->where('is_cooperative', true);
+        }
+        if (!empty($filters['is_online_multiplayer'])) {
+            $query->where('is_online_multiplayer', true);
+        }
+        if (!empty($filters['is_local_multiplayer'])) {
+            $query->where('is_local_multiplayer', true);
+        }
+
+        // Filter by having screenshots
+        if (!empty($filters['has_screenshots'])) {
+            $query->whereHas('screenshots');
+        }
+
+        // Sorting
+        $allowedSortFields = ['metacritic_score', 'name', 'release_date', 'created_at'];
+        $sortBy  = in_array($filters['sort_by'] ?? '', $allowedSortFields)
+            ? $filters['sort_by']
+            : 'metacritic_score';
+        $sortDir = ($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        // Games without a score sink to the bottom regardless of direction
+        $query->orderByRaw("CASE WHEN {$sortBy} IS NULL THEN 1 ELSE 0 END")
+              ->orderBy($sortBy, $sortDir);
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     /**
@@ -78,14 +114,22 @@ class GameService
     }
 
     /**
-     * Get a single game with all relationships.
+     * Get a single game with all relationships by numeric ID or slug.
      *
-     * @param int $gameId
+     * @param int|string $identifier
      * @return Game
      */
-    public function getGameWithRelations(int $gameId): Game
+    public function getGameWithRelations($identifier): Game
     {
-        return Game::with(['genres', 'platforms', 'userGames.status', 'userGames.platform'])->findOrFail($gameId);
+        $query = Game::with(['genres', 'platforms', 'userGames.status', 'userGames.platform', 'screenshots']);
+
+        if (is_numeric($identifier)) {
+            $query->where('id', $identifier);
+        } else {
+            $query->where('slug', $identifier);
+        }
+
+        return $query->firstOrFail();
     }
 
     /**
