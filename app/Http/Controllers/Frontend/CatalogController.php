@@ -33,6 +33,7 @@ class CatalogController extends Controller
             'metacritic_score', 'sort_by', 'sort_dir',
             'is_multiplayer', 'is_cooperative',
             'is_online_multiplayer', 'is_local_multiplayer',
+            'has_screenshots',
         ];
 
         return Inertia::render('Frontend/Games/Index', [

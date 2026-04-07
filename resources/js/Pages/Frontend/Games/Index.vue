@@ -25,6 +25,7 @@ const form = ref({
     is_cooperative: props.filters.is_cooperative ? '1' : '',
     is_online_multiplayer: props.filters.is_online_multiplayer ? '1' : '',
     is_local_multiplayer: props.filters.is_local_multiplayer ? '1' : '',
+    has_screenshots: props.filters.has_screenshots ? '1' : '',
 });
 
 // ── Sidebar open/close on mobile ──────────────────────────────────────
@@ -61,7 +62,7 @@ const activeFilterCount = computed(() => {
     return [f.name, f.genre_id, f.platform_id, f.developer, f.publisher,
     f.release_year, f.metacritic_score,
     f.is_multiplayer, f.is_cooperative,
-    f.is_online_multiplayer, f.is_local_multiplayer]
+    f.is_online_multiplayer, f.is_local_multiplayer, f.has_screenshots]
         .filter(Boolean).length;
 });
 
@@ -81,7 +82,7 @@ const clearFilters = () => {
         release_year: '', metacritic_score: '',
         sort_by: 'metacritic_score', sort_dir: 'desc',
         is_multiplayer: '', is_cooperative: '',
-        is_online_multiplayer: '', is_local_multiplayer: '',
+        is_online_multiplayer: '', is_local_multiplayer: '', has_screenshots: '',
     };
     applyFilters();
 };
@@ -249,6 +250,18 @@ const scoreOptions = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
                             </div>
                         </div>
 
+                        <!-- Extra toggles -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Contenido</label>
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                <button @click="form.has_screenshots = form.has_screenshots ? '' : '1'; applyFilters()"
+                                    class="btn btn-sm rounded-pill"
+                                    :class="form.has_screenshots ? 'btn-primary' : 'btn-outline-secondary'">
+                                    <i class="fas fa-images me-1"></i>Con capturas
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="d-grid mt-4">
                             <button @click="applyFilters" class="btn btn-primary rounded-pill">
                                 <i class="fas fa-search me-2"></i>Aplicar
@@ -315,6 +328,10 @@ const scoreOptions = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
                     <span v-if="form.is_local_multiplayer" class="badge bg-primary rounded-pill py-2 px-3">
                         Local <button class="btn-close btn-close-white ms-1" style="font-size:.6rem;"
                             @click="form.is_local_multiplayer = ''; applyFilters()"></button>
+                    </span>
+                    <span v-if="form.has_screenshots" class="badge bg-info text-dark rounded-pill py-2 px-3">
+                        Con Capturas <button class="btn-close ms-1" style="font-size:.6rem;"
+                            @click="form.has_screenshots = ''; applyFilters()"></button>
                     </span>
                 </div>
 

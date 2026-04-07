@@ -80,6 +80,11 @@ class GameService
             $query->where('is_local_multiplayer', true);
         }
 
+        // Filter by having screenshots
+        if (!empty($filters['has_screenshots'])) {
+            $query->whereHas('screenshots');
+        }
+
         // Sorting
         $allowedSortFields = ['metacritic_score', 'name', 'release_date', 'created_at'];
         $sortBy  = in_array($filters['sort_by'] ?? '', $allowedSortFields)

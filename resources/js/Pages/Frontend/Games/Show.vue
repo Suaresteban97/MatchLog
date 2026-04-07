@@ -59,7 +59,7 @@ const formatDate = (dateStr) => {
             <div class="col-12 col-md-4 col-lg-3">
                 <div class="card bg-dark border-secondary shadow-lg overflow-hidden" style="border-radius: 12px;">
                     <img v-if="gameData.cover_image_url" :src="gameData.cover_image_url" :alt="gameData.name"
-                        class="w-100 object-fit-cover shadow-sm bg-black" style="aspect-ratio: 3 / 4;">
+                        class="w-100 shadow-sm bg-black" style="aspect-ratio: 3 / 4; object-fit: cover; object-position: center top;">
                     <div v-else
                         class="w-100 bg-black d-flex align-items-center justify-content-center text-muted col-12"
                         style="aspect-ratio: 3 / 4;">

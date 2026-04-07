@@ -61,6 +61,7 @@ services:
     networks:
       - backlog-network
 
+  # Redis
   redis:
     image: redis:alpine
     container_name: backlog-redis
@@ -68,6 +69,7 @@ services:
     networks:
       - backlog-network
 
+  # Worker
   worker:
     build:
       context: .
@@ -111,6 +113,26 @@ services:
     command: php artisan reverb:start --host="0.0.0.0" --port=8080
     networks:
       - backlog-network
+
+  # Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        user: www-data
+        uid: 1000
+    container_name: backlog-scheduler
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backlog-network
+    command: ["sh", "-c", "while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done"]
 
 networks:
   backlog-network:

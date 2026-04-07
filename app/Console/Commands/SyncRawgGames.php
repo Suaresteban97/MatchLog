@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 class SyncRawgGames extends Command
 {
     protected $signature = 'rawg:sync
-                            {--pages=1 : How many pages to fetch in this run}
+                            {--pages=40 : How many pages to fetch in this run}
                             {--per-page=40 : Results per page (max 40)}
                             {--reset : Reset progress and start from page 1}';
 
@@ -72,7 +72,7 @@ class SyncRawgGames extends Command
             $state->advance($totalItems, $totalPages);
 
             $this->line("  ✓ Page {$page}: {$synced} synced, {$skipped} skipped. " .
-                        "Total RAWG: {$totalItems} games (~{$totalPages} pages).");
+                "Total RAWG: {$totalItems} games (~{$totalPages} pages).");
 
             // Stop if RAWG says there's no more data
             if (empty($data['next'])) {
