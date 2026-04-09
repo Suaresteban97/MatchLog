@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Game;
 use App\Models\User;
 use App\Models\GameStatus;
+use App\Models\UserGame;
 use Illuminate\Support\Facades\DB;
 
 class GameService
@@ -94,7 +95,7 @@ class GameService
 
         // Games without a score sink to the bottom regardless of direction
         $query->orderByRaw("CASE WHEN {$sortBy} IS NULL THEN 1 ELSE 0 END")
-              ->orderBy($sortBy, $sortDir);
+            ->orderBy($sortBy, $sortDir);
 
         return $query->paginate($perPage)->withQueryString();
     }
@@ -195,12 +196,6 @@ class GameService
             ->where('user_id', $user->id)
             ->where('game_id', $gameId);
 
-        if ($platformId) {
-            $query->where('game_platform_id', $platformId);
-        } else {
-            $query->whereNull('game_platform_id');
-        }
-
         $existingLink = $query->first();
 
         if ($existingLink) {
@@ -210,6 +205,7 @@ class GameService
         } else {
             // Link
             $statusId = $pivotData['game_status_id'] ?? null;
+
             if (!$statusId) {
                 $status = GameStatus::where('slug', 'backlog')->first();
                 $statusId = $status ? $status->id : null;
@@ -304,5 +300,77 @@ class GameService
         $updated = DB::table('user_games')->where('id', $userGame->id)->first();
 
         return ['success' => true, 'data' => $updated];
+    }
+
+    /**
+     * Return aggregated community stats for a game in a single DB round-trip.
+     * Rating scale is 0-100 (Metacritic-style).
+     *
+     * @param int $gameId
+     * @return array{
+     *   players_count: int,
+     *   avg_rating: float|null,
+     *   avg_hours: float|null,
+     *   reviews_count: int,
+     *   status_breakdown: array
+     * }
+     */
+    public function getGameStats(int $gameId): array
+    {
+        // ── Global aggregates ──────────────────────────────────────────────
+        $agg = DB::table('user_games')
+            ->selectRaw("
+                COUNT(*)                                              AS players_count,
+                AVG(CASE WHEN rating > 0 THEN rating END)            AS avg_rating,
+                AVG(CASE WHEN hours_played > 0 THEN hours_played END) AS avg_hours,
+                COUNT(CASE WHEN notes IS NOT NULL AND notes != '' THEN 1 END) AS reviews_count
+            ")
+            ->where('game_id', $gameId)
+            ->first();
+
+        // ── Status breakdown ───────────────────────────────────────────────
+        $breakdown = DB::table('user_games as ug')
+            ->join('game_statuses as gs', 'gs.id', '=', 'ug.game_status_id')
+            ->select('gs.id', 'gs.name', 'gs.slug', DB::raw('COUNT(*) as total'))
+            ->where('ug.game_id', $gameId)
+            ->whereNotNull('ug.game_status_id')
+            ->groupBy('gs.id', 'gs.name', 'gs.slug')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn($row) => [
+                'id'    => $row->id,
+                'name'  => $row->name,
+                'slug'  => $row->slug,
+                'total' => (int) $row->total,
+            ])
+            ->values()
+            ->toArray();
+
+        return [
+            'players_count'    => (int) ($agg->players_count ?? 0),
+            'avg_rating'       => $agg->avg_rating ? round((float) $agg->avg_rating, 1) : null,
+            'avg_hours'        => $agg->avg_hours  ? round((float) $agg->avg_hours,  1) : null,
+            'reviews_count'    => (int) ($agg->reviews_count ?? 0),
+            'status_breakdown' => $breakdown,
+        ];
+    }
+
+    /**
+     * Paginated reviews (UserGame entries that have notes).
+     * Eager-loads user and status to avoid N+1.
+     *
+     * @param int $gameId
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getGameReviews(int $gameId, int $perPage = 5)
+    {
+        return UserGame::with(['user', 'status'])
+            ->where('game_id', $gameId)
+            ->whereNotNull('notes')
+            ->where('notes', '!=', '')
+            ->orderByDesc('updated_at')
+            ->paginate($perPage)
+            ->withQueryString();
     }
 }
