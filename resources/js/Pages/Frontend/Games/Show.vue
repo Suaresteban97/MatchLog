@@ -1,13 +1,42 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '../../../Layouts/AppLayout.vue';
 import axios from 'axios';
 
-const props = defineProps({ game: Object });
+const props = defineProps({
+    game: Object,
+    game_stats: Object,
+    reviews: Object,
+});
 
 const gameData = computed(() => props.game.data || props.game);
 const screenshots = computed(() => gameData.value.screenshots || []);
+
+// ── Community stats ──────────────────────────────────────────────────
+const stats = computed(() => props.game_stats || {});
+const reviewsList = computed(() => props.reviews?.data || []);
+const reviewsMeta = computed(() => props.reviews?.meta || {});
+const reviewsLinks = computed(() => props.reviews?.links || {});
+
+// Status icon/color map
+const statusConfig = {
+    'playing':   { icon: 'fa-gamepad',   color: '#0ff0fc', label: 'Playing'   },
+    'completed': { icon: 'fa-check',      color: '#10b981', label: 'Completed' },
+    'backlog':   { icon: 'fa-list',       color: '#a78bfa', label: 'Backlog'   },
+    'wishlist':  { icon: 'fa-heart',      color: '#f472b6', label: 'Wishlist'  },
+    'dropped':   { icon: 'fa-times',      color: '#f87171', label: 'Dropped'   },
+    'on-hold':   { icon: 'fa-pause',      color: '#fbbf24', label: 'On Hold'   },
+};
+
+const goToReviewPage = (url) => {
+    if (!url) return;
+    router.get(url, {}, { preserveState: true, preserveScroll: true });
+};
+
+// Rating 0-100 → display helpers
+const ratingColor = (r) => r >= 75 ? '#10b981' : r >= 50 ? '#fbbf24' : '#f87171';
+const ratingLabel = (r) => r >= 75 ? 'Muy bien' : r >= 50 ? 'Regular' : 'Mal';
 
 // Lightbox
 const lightboxImg = ref(null);
@@ -39,6 +68,11 @@ const formatDate = (dateStr) => {
     if (!dateStr) return 'TBD';
     const d = new Date(dateStr);
     return !isNaN(d) ? d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : dateStr;
+};
+const formatDateTime = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return !isNaN(d) ? d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : dateStr;
 };
 </script>
 
@@ -196,6 +230,148 @@ const formatDate = (dateStr) => {
             </div>
         </div>
 
+        <!-- ══════ MATCHLOG COMMUNITY ══════ -->
+        <div v-if="stats.players_count > 0" class="mt-5 pb-5">
+
+            <!-- Section title -->
+            <h5 class="text-white border-bottom border-secondary pb-2 mb-4">
+                <i class="fas fa-users me-2 text-primary"></i>Comunidad MatchLog
+            </h5>
+
+            <!-- ── Summary row ──────────────────────────────────────────── -->
+            <div class="row g-3 mb-4">
+
+                <!-- Players -->
+                <div class="col-6 col-md-3">
+                    <div class="community-stat-card">
+                        <i class="fas fa-user-friends community-stat-icon" style="color: var(--neon-blue);"></i>
+                        <div class="community-stat-value">{{ stats.players_count }}</div>
+                        <div class="community-stat-label">Jugadores</div>
+                    </div>
+                </div>
+
+                <!-- Avg Rating -->
+                <div class="col-6 col-md-3">
+                    <div class="community-stat-card">
+                        <i class="fas fa-star community-stat-icon" :style="{ color: stats.avg_rating ? ratingColor(stats.avg_rating) : '#555' }"></i>
+                        <div class="community-stat-value" :style="{ color: stats.avg_rating ? ratingColor(stats.avg_rating) : 'inherit' }">
+                            {{ stats.avg_rating ?? '—' }}
+                        </div>
+                        <div class="community-stat-label">Puntuación media</div>
+                        <div v-if="stats.avg_rating" class="community-stat-sub">de 100</div>
+                    </div>
+                </div>
+
+                <!-- Avg Hours -->
+                <div class="col-6 col-md-3">
+                    <div class="community-stat-card">
+                        <i class="fas fa-clock community-stat-icon" style="color: #a78bfa;"></i>
+                        <div class="community-stat-value">{{ stats.avg_hours ?? '—' }}</div>
+                        <div class="community-stat-label">Horas promedio</div>
+                    </div>
+                </div>
+
+                <!-- Reviews count -->
+                <div class="col-6 col-md-3">
+                    <div class="community-stat-card">
+                        <i class="fas fa-comment-alt community-stat-icon" style="color: #f472b6;"></i>
+                        <div class="community-stat-value">{{ stats.reviews_count }}</div>
+                        <div class="community-stat-label">Reviews escritas</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Status breakdown ─────────────────────────────────────── -->
+            <div v-if="stats.status_breakdown?.length" class="card border-secondary mb-4">
+                <div class="card-body p-4">
+                    <h6 class="text-white mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>Estado de los jugadores</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div v-for="s in stats.status_breakdown" :key="s.id" class="status-bar-row">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-semibold" :style="{ color: statusConfig[s.slug]?.color ?? '#aaa' }">
+                                    <i class="fas me-2" :class="statusConfig[s.slug]?.icon ?? 'fa-circle'"></i>{{ s.name }}
+                                </span>
+                                <span class="small text-muted">{{ s.total }} jugadores</span>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.07); border-radius:4px;">
+                                <div class="progress-bar" role="progressbar"
+                                    :style="{
+                                        width: ((s.total / stats.players_count) * 100).toFixed(1) + '%',
+                                        background: statusConfig[s.slug]?.color ?? 'var(--neon-purple)',
+                                        borderRadius: '4px'
+                                    }">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Reviews list ─────────────────────────────────────────── -->
+            <div v-if="reviewsList.length > 0">
+                <h6 class="text-white mb-3"><i class="fas fa-comment-dots me-2 text-primary"></i>Reviews de la comunidad</h6>
+
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <div v-for="review in reviewsList" :key="review.id" class="review-card">
+                        <div class="d-flex align-items-start gap-3">
+                            <!-- Avatar -->
+                            <div class="review-avatar" :style="{ background: ratingColor(review.rating ?? 50) }">
+                                {{ review.user?.name?.[0]?.toUpperCase() ?? '?' }}
+                            </div>
+                            <!-- Body -->
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                                    <span class="fw-semibold text-white">{{ review.user?.name }}</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <!-- Rating badge -->
+                                        <span v-if="review.rating" class="review-score"
+                                            :style="{ background: ratingColor(review.rating), color: '#000' }">
+                                            {{ review.rating }}
+                                        </span>
+                                        <!-- Status pill -->
+                                        <span v-if="review.status" class="badge rounded-pill small"
+                                            :style="{ background: statusConfig[review.status.slug]?.color ?? '#555', color: '#000' }">
+                                            <i class="fas me-1" :class="statusConfig[review.status.slug]?.icon ?? 'fa-circle'"></i>
+                                            {{ review.status.name }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <!-- Notes -->
+                                <p class="text-muted small mb-1" style="line-height:1.6;">{{ review.notes }}</p>
+                                <!-- Meta -->
+                                <div class="d-flex gap-3 small text-muted">
+                                    <span v-if="review.hours_played">
+                                        <i class="fas fa-clock me-1"></i>{{ review.hours_played }}h
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-calendar-alt me-1"></i>{{ formatDateTime(review.updated_at) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="reviewsMeta.last_page > 1" class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill"
+                        :disabled="!reviewsLinks.prev"
+                        @click="goToReviewPage(reviewsLinks.prev)">
+                        <i class="fas fa-chevron-left me-1"></i>Anterior
+                    </button>
+                    <span class="small text-muted">
+                        Página {{ reviewsMeta.current_page }} de {{ reviewsMeta.last_page }}
+                    </span>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill"
+                        :disabled="!reviewsLinks.next"
+                        @click="goToReviewPage(reviewsLinks.next)">
+                        Siguiente<i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
     </AppLayout>
 
     <!-- ══════ LIGHTBOX ══════ -->
@@ -325,4 +501,86 @@ const formatDate = (dateStr) => {
         opacity: 1;
     }
 }
+
+/* ── Community stat cards ────────────────────────── */
+.community-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.community-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(188, 19, 254, .15);
+    border-color: var(--neon-purple);
+}
+
+.community-stat-icon {
+    font-size: 1.4rem;
+    margin-bottom: .5rem;
+    display: block;
+}
+
+.community-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: .25rem;
+}
+
+.community-stat-label {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.community-stat-sub {
+    font-size: .65rem;
+    color: var(--text-muted);
+    margin-top: .15rem;
+}
+
+/* ── Review cards ────────────────────────────────── */
+.review-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.review-card:hover {
+    border-color: rgba(188, 19, 254, .4);
+    box-shadow: 0 4px 16px rgba(188, 19, 254, .1);
+}
+
+.review-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #000;
+    flex-shrink: 0;
+}
+
+.review-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: .8rem;
+    width: 36px;
+    height: 24px;
+    border-radius: 6px;
+}
+
 </style>

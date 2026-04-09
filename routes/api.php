@@ -115,6 +115,7 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      */
     Route::get('/games', [GamesController::class, 'getGames']);
     Route::get('/games/{id}', [GamesController::class, 'show']);
+    Route::get('/games/{id}/reviews', [GamesController::class, 'reviews']); // Infinite scroll reviews
     Route::get('/games-metadata', [GamesController::class, 'metadata']);
     Route::get('/my-games', [GamesController::class, 'getUserGames']);
     Route::put('/my-games/{id}', [GamesController::class, 'updateUserGame']);

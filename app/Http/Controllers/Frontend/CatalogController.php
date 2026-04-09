@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Services\GameService;
 use App\Http\Resources\Games\GameResource;
+use App\Http\Resources\Games\GameReviewResource;
+
 use App\Http\Resources\Games\GameDetailResource;
 use App\Models\Genre;
 use App\Models\GamePlatform;
@@ -28,11 +30,20 @@ class CatalogController extends Controller
         $gamesData = GameResource::collection($paginator)->response()->getData(true);
 
         $filterKeys = [
-            'name', 'genre_id', 'platform_id', 'platform',
-            'developer', 'publisher', 'release_year',
-            'metacritic_score', 'sort_by', 'sort_dir',
-            'is_multiplayer', 'is_cooperative',
-            'is_online_multiplayer', 'is_local_multiplayer',
+            'name',
+            'genre_id',
+            'platform_id',
+            'platform',
+            'developer',
+            'publisher',
+            'release_year',
+            'metacritic_score',
+            'sort_by',
+            'sort_dir',
+            'is_multiplayer',
+            'is_cooperative',
+            'is_online_multiplayer',
+            'is_local_multiplayer',
             'has_screenshots',
         ];
 
@@ -44,13 +55,19 @@ class CatalogController extends Controller
         ]);
     }
 
-    public function show($identifier)
+    public function show(Request $request, $identifier)
     {
         // $identifier can be the slug or numeric ID
         $game = $this->gameService->getGameWithRelations($identifier);
-        
+
+        $stats   = $this->gameService->getGameStats($game->id);
+        $reviews = $this->gameService->getGameReviews($game->id, 5);
+
         return Inertia::render('Frontend/Games/Show', [
-            'game' => new GameDetailResource($game)
+            'game'       => new GameDetailResource($game),
+            'game_stats' => $stats,
+            'reviews'    => GameReviewResource::collection($reviews)
+                ->response()->getData(true),
         ]);
     }
 }
