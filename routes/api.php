@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\FollowerController;
+use App\Http\Controllers\Api\FriendshipController;
+use App\Http\Controllers\Api\DirectMessageController;
 use App\Http\Controllers\Api\GameSessionController;
 use App\Http\Controllers\Api\ExecutionPlatformController;
 use App\Http\Controllers\Api\SocialProfileController;
@@ -89,6 +91,25 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::post('/follow', [FollowerController::class, 'follow']);
     Route::post('/unfollow', [FollowerController::class, 'unfollow']);
     Route::get('/is-following/{userId}', [FollowerController::class, 'isFollowing']);
+
+    /**
+     * Friendships
+     */
+    Route::get('/friends', [FriendshipController::class, 'index']);
+    Route::get('/friends/pending', [FriendshipController::class, 'pending']);
+    Route::get('/friends/sent', [FriendshipController::class, 'sent']);
+    Route::post('/friends/request', [FriendshipController::class, 'sendRequest']);
+    Route::post('/friends/accept', [FriendshipController::class, 'acceptRequest']);
+    Route::post('/friends/reject', [FriendshipController::class, 'rejectRequest']);
+    Route::post('/friends/remove', [FriendshipController::class, 'removeFriend']);
+
+    /**
+     * Direct Messages (1-on-1 Chat)
+     */
+    Route::get('/chats', [DirectMessageController::class, 'getConversations']);
+    Route::get('/chats/user/{friendId}', [DirectMessageController::class, 'getMessages']);
+    Route::post('/chats/user/{friendId}', [DirectMessageController::class, 'sendMessage']);
+    Route::put('/chats/user/{friendId}/read', [DirectMessageController::class, 'markAsRead']);
 
     /**
      * Game Sessions

@@ -94,6 +94,47 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    // Friendships System
+    public function friendRequestsSent()
+    {
+        return $this->hasMany(Friendship::class, 'user_id');
+    }
+
+    public function friendRequestsReceived()
+    {
+        return $this->hasMany(Friendship::class, 'friend_id');
+    }
+
+    /**
+     * Helper to get all accepted friends (merges both sides of the relationship)
+     */
+    public function getFriendsAttribute()
+    {
+        $friendsSent = $this->belongsToMany(User::class, 'friendships', 'user_id', 'friend_id')
+            ->wherePivot('status', 'accepted')
+            ->withTimestamps()
+            ->get();
+
+        $friendsReceived = $this->belongsToMany(User::class, 'friendships', 'friend_id', 'user_id')
+            ->wherePivot('status', 'accepted')
+            ->withTimestamps()
+            ->get();
+
+        return $friendsSent->merge($friendsReceived);
+    }
+
+    // Direct Messages & Conversations
+    public function conversations()
+    {
+        return $this->hasMany(Conversation::class, 'user1_id')
+            ->union($this->hasMany(Conversation::class, 'user2_id')->toBase());
+    }
+
+    public function sentDirectMessages()
+    {
+        return $this->hasMany(DirectMessage::class, 'sender_id');
+    }
+
     // Game Sessions
     public function sessionsHosting()
     {

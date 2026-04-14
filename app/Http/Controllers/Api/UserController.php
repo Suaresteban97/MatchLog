@@ -12,9 +12,26 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = User::query();
+        
+        // Don't show the active user in the search
+        if ($request->user()) {
+            $query->where('id', '!=', $request->user()->id);
+        }
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', $searchTerm)
+                  ->orWhere('email', 'LIKE', $searchTerm);
+            });
+        }
+
+        return response()->json([
+            'data' => $query->limit(20)->get(['id', 'name', 'email'])
+        ]);
     }
 
     /**

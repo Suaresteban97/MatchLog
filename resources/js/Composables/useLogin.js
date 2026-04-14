@@ -14,16 +14,11 @@ export function useLogin() {
                 email: email.value,
                 password: password.value
             }, {
-                // Asumo que ADMIN_TOKEN se pasa globalmente o se captura después,
-                // si es necesario lo podemos obtener del DOM/Window aquí
                 'Admin-Authorization': window.ADMIN_TOKEN || ''
             });
 
-            // Si el login de la API fue correcto (en backend crea la sesión Sanctum),
-            // con Inertia redirigimos al dashboard sin recargar todo el browser.
             router.visit('/dashboard');
         } catch (err) {
-            // El error real se delega a `error.value` de useApi
             console.error('Fallo en el login:', err);
         }
     };
