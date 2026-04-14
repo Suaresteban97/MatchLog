@@ -1,9 +1,14 @@
 <script setup>
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { useApi } from '../Composables/useApi';
 import { ref, onMounted } from 'vue';
+import { useChat } from '../Composables/useChat';
+import FriendsPanel from '../Pages/Frontend/Components/Social/FriendsPanel.vue';
+import GlobalChatWidget from '../Pages/Frontend/Components/Social/GlobalChatWidget.vue';
 
 const { post } = useApi();
+const { initGlobalEcho } = useChat();
+const page = usePage();
 
 const isVintage = ref(false);
 
@@ -21,6 +26,12 @@ const toggleTheme = () => {
 onMounted(() => {
     // Check if the script in app.blade.php already applied the class
     isVintage.value = document.documentElement.classList.contains('theme-vintage');
+    
+    // Join global echo presence channel
+    const authUser = page.props.auth?.user;
+    if (authUser) {
+        initGlobalEcho(authUser.id);
+    }
 });
 
 const logout = async () => {
@@ -66,9 +77,11 @@ const logout = async () => {
                             </Link>
                         </li>
                     </ul>
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <FriendsPanel />
+
                         <!-- Theme Toggle Button -->
-                        <button @click="toggleTheme" class="btn btn-sm btn-outline-secondary me-3 border-0" :title="isVintage ? 'Volver a Cyberpunk' : 'Modo Vintage (Clásico)'">
+                        <button @click="toggleTheme" class="btn btn-sm btn-outline-secondary border-0" :title="isVintage ? 'Volver a Cyberpunk' : 'Modo Vintage (Clásico)'">
                             <i :class="isVintage ? 'fas fa-desktop' : 'fas fa-book-open'" style="font-size: 1.2rem;"></i>
                         </button>
                         
@@ -82,5 +95,7 @@ const logout = async () => {
         <main class="container">
             <slot />
         </main>
+        <!-- Global Chat Widget (Floating) -->
+        <GlobalChatWidget />
     </div>
 </template>
