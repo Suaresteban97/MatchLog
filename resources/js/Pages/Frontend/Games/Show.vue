@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '../../../Layouts/AppLayout.vue';
+import ContributionForm from '../Components/ContributionForm.vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -125,15 +126,35 @@ const formatDateTime = (dateStr) => {
                         <div class="d-flex justify-content-between align-items-start mb-4">
                             <h1 class="fw-bold text-white display-5 mb-0"
                                 style="text-shadow: 2px 2px 10px rgba(0,0,0,0.5);">{{ gameData.name }}</h1>
-                            <div v-if="gameData.metacritic_score"
-                                class="text-center bg-black border border-secondary p-3 rounded-circle shadow-lg"
-                                style="width: 80px; height: 80px; display: flex; flex-direction: column; justify-content: center;">
-                                <span class="d-block small text-muted text-uppercase"
-                                    style="font-size: 0.6rem; letter-spacing: 1px;">Metascore</span>
-                                <span class="fs-4 fw-bold"
-                                    :class="gameData.metacritic_score >= 80 ? 'text-success' : (gameData.metacritic_score >= 60 ? 'text-warning' : 'text-danger')">
-                                    {{ gameData.metacritic_score }}
-                                </span>
+
+                            <!-- Right side: Metascore + Contribute button -->
+                            <div class="d-flex flex-column align-items-end gap-2">
+                                <div v-if="gameData.metacritic_score"
+                                    class="text-center bg-black border border-secondary p-3 rounded-circle shadow-lg"
+                                    style="width: 80px; height: 80px; display: flex; flex-direction: column; justify-content: center;">
+                                    <span class="d-block small text-muted text-uppercase"
+                                        style="font-size: 0.6rem; letter-spacing: 1px;">Metascore</span>
+                                    <span class="fs-4 fw-bold"
+                                        :class="gameData.metacritic_score >= 80 ? 'text-success' : (gameData.metacritic_score >= 60 ? 'text-warning' : 'text-danger')">
+                                        {{ gameData.metacritic_score }}
+                                    </span>
+                                </div>
+
+                                <!-- Contribution trigger -->
+                                <ContributionForm
+                                    resource-type="game"
+                                    :resource-id="gameData.id"
+                                    :resource-label="gameData.name"
+                                    :current-data="{
+                                        name:             gameData.name,
+                                        description:      gameData.description,
+                                        cover_image_url:  gameData.cover_image_url,
+                                        release_date:     gameData.release_date,
+                                        developer:        gameData.developer,
+                                        publisher:        gameData.publisher,
+                                        metacritic_score: gameData.metacritic_score,
+                                    }"
+                                />
                             </div>
                         </div>
 

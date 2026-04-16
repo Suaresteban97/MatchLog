@@ -713,3 +713,287 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .replying-to-banner {
     border-left: 3px solid var(--neon-blue, #0ff0fc);
 }
+
+/* =========================================================================
+   Community Contributions – ContributionForm (modal)
+   ========================================================================= */
+
+.contribution-form {
+    position: relative;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Trigger button ───────────────────────────────────────────────────────── */
+.cf-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.9rem;
+    border: 1.5px solid hsl(220 14% 30%);
+    border-radius: 8px;
+    background: transparent;
+    color: hsl(220 14% 65%);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+
+.cf-trigger:hover {
+    border-color: hsl(258 80% 60%);
+    color: hsl(258 80% 72%);
+    background: hsl(258 80% 60% / 0.08);
+}
+
+/* ── Backdrop ─────────────────────────────────────────────────────────────── */
+.cf-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: hsl(0 0% 0% / 0.72);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* ── Modal box ────────────────────────────────────────────────────────────── */
+.cf-modal {
+    background: hsl(222 16% 11%);
+    border: 1px solid hsl(220 14% 22%);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px hsl(0 0% 0% / 0.6);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Modal header ─────────────────────────────────────────────────────────── */
+.cf-modal__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 1.4rem 1.5rem 1rem;
+    border-bottom: 1px solid hsl(220 14% 18%);
+    position: relative;
+}
+
+.cf-modal__pretitle {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: hsl(258 70% 65%);
+}
+
+.cf-modal__title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: hsl(220 14% 92%);
+    padding-right: 2rem; /* room for close btn */
+}
+
+.cf-modal__close {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.1rem;
+    background: hsl(220 14% 18%);
+    border: 1px solid hsl(220 14% 25%);
+    color: hsl(220 14% 55%);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.cf-modal__close:hover {
+    background: hsl(0 60% 45% / 0.2);
+    border-color: hsl(0 60% 55% / 0.4);
+    color: hsl(0 70% 65%);
+}
+
+/* ── Modal body ───────────────────────────────────────────────────────────── */
+.cf-modal__body {
+    padding: 1.4rem 1.5rem 1.5rem;
+    overflow-y: auto;
+}
+
+/* ── Form fields ──────────────────────────────────────────────────────────── */
+.cf-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.cf-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: hsl(220 14% 60%);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cf-required { color: hsl(258 80% 68%); }
+
+.cf-select,
+.cf-textarea {
+    background: hsl(222 16% 7%);
+    border: 1px solid hsl(220 14% 22%);
+    border-radius: 8px;
+    color: hsl(220 14% 88%);
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.75rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cf-select:focus,
+.cf-textarea:focus {
+    outline: none;
+    border-color: hsl(258 80% 58%);
+    box-shadow: 0 0 0 3px hsl(258 80% 58% / 0.15);
+}
+
+.cf-select:disabled,
+.cf-textarea:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cf-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.cf-char-count {
+    align-self: flex-end;
+    font-size: 0.7rem;
+    color: hsl(220 14% 42%);
+}
+
+.cf-snapshot {
+    font-size: 0.85rem;
+    color: hsl(220 14% 52%);
+    background: hsl(222 16% 7%);
+    border: 1px solid hsl(220 14% 18%);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    word-break: break-all;
+    font-style: italic;
+}
+
+/* ── Feedback banners ─────────────────────────────────────────────────────── */
+.cf-feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.cf-feedback--success {
+    background: hsl(141 60% 17% / 0.5);
+    border: 1px solid hsl(141 60% 38% / 0.45);
+    color: hsl(141 60% 72%);
+}
+
+.cf-feedback--error {
+    background: hsl(0 70% 18% / 0.5);
+    border: 1px solid hsl(0 70% 48% / 0.45);
+    color: hsl(0 70% 72%);
+}
+
+.cf-feedback__icon { font-size: 1.1rem; flex-shrink: 0; }
+.cf-feedback p { margin: 0.2rem 0 0; }
+
+/* ── Actions ──────────────────────────────────────────────────────────────── */
+.cf-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.35rem;
+}
+
+.cf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s, transform 0.1s, background 0.2s;
+}
+
+.cf-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cf-btn:not(:disabled):active { transform: scale(0.97); }
+
+.cf-btn--primary { background: hsl(258 80% 55%); color: #fff; }
+.cf-btn--primary:not(:disabled):hover { background: hsl(258 80% 63%); }
+
+.cf-btn--ghost {
+    background: transparent;
+    border: 1px solid hsl(220 14% 26%);
+    color: hsl(220 14% 62%);
+}
+.cf-btn--ghost:not(:disabled):hover {
+    border-color: hsl(220 14% 42%);
+    color: hsl(220 14% 80%);
+}
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+.cf-spinner {
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 2px solid hsl(0 0% 100% / 0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: cf-spin 0.6s linear infinite;
+}
+
+@keyframes cf-spin { to { transform: rotate(360deg); } }
+
+/* ── Modal transition (fade + scale) ─────────────────────────────────────── */
+.cf-modal-enter-active,
+.cf-modal-leave-active {
+    transition: opacity 0.22s ease;
+}
+
+.cf-modal-enter-active .cf-modal,
+.cf-modal-leave-active .cf-modal {
+    transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.cf-modal-enter-from,
+.cf-modal-leave-to {
+    opacity: 0;
+}
+
+.cf-modal-enter-from .cf-modal {
+    transform: scale(0.94) translateY(12px);
+    opacity: 0;
+}
+
+.cf-modal-leave-to .cf-modal {
+    transform: scale(0.96) translateY(6px);
+    opacity: 0;
+}
