@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ExecutionPlatformController;
 use App\Http\Controllers\Api\SocialProfileController;
 use App\Http\Controllers\Api\GamesController;
 use App\Http\Controllers\Api\RawgController;
+use App\Http\Controllers\Api\ContributionController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -142,6 +143,13 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::put('/my-games/{id}', [GamesController::class, 'updateUserGame']);
     Route::post('/my-games/{id}/toggle', [GamesController::class, 'toggleUserGame']);
     Route::patch('/my-games/{id}/status', [GamesController::class, 'changeStatus']);
+
+    /**
+     * Community Contributions
+     */
+    Route::post('/contributions', [ContributionController::class, 'store']);
+    Route::get('/contributions', [ContributionController::class, 'index']);
+    Route::get('/contributions/resource/{type}/{id}', [ContributionController::class, 'forResource']);
 });
 
 //Google Auth
