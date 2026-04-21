@@ -60,6 +60,13 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::resource('users', UserController::class);
 
     /**
+     * Collections Methods
+     */
+    Route::resource('collections', \App\Http\Controllers\Api\CollectionController::class);
+    Route::post('collections/{collection}/games/{game}', [\App\Http\Controllers\Api\CollectionController::class, 'addGame']);
+    Route::delete('collections/{collection}/games/{game}', [\App\Http\Controllers\Api\CollectionController::class, 'removeGame']);
+
+    /**
      * Admin (Moderation Panel)
      */
     Route::middleware(['role:admin'])->group(function () {

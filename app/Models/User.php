@@ -68,6 +68,12 @@ class User extends Authenticatable
         return $this->belongsToMany(Device::class, 'user_devices');
     }
 
+    // Collections
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
+    }
+
     // public function googleToken() {
     //     return $this->belongsToOne(GoogleToken::class, 'user_id')->where("provider", "google");
     // }

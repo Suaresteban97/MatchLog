@@ -119,4 +119,13 @@ class Game extends Model
     {
         return $this->morphMany(Contribution::class, 'contributable');
     }
+
+    /**
+     * Collections containing this game.
+     */
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class, 'collection_game')
+            ->withTimestamps();
+    }
 }
