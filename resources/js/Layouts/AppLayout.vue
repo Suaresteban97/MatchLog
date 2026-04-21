@@ -76,6 +76,13 @@ const logout = async () => {
                                 <i class="fas fa-user me-1"></i> Mi Espacio
                             </Link>
                         </li>
+                        <li class="nav-item" v-if="$page.props.auth.user?.role?.slug === 'admin'">
+                            <Link class="nav-link"
+                                :class="{ active: $page.url.startsWith('/admin/moderation') }"
+                                href="/admin/moderation">
+                                <i class="fas fa-shield-alt me-1"></i> Moderación
+                            </Link>
+                        </li>
                     </ul>
                     <div class="d-flex align-items-center gap-3">
                         <FriendsPanel />

@@ -48,6 +48,16 @@ class User extends Authenticatable
 
     //Relations
 
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role !== null && $this->role->slug === 'admin';
+    }
+
     public function userDevices()
     {
         return $this->hasMany(UserDevice::class);
