@@ -48,6 +48,16 @@ class User extends Authenticatable
 
     //Relations
 
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role !== null && $this->role->slug === 'admin';
+    }
+
     public function userDevices()
     {
         return $this->hasMany(UserDevice::class);
@@ -56,6 +66,12 @@ class User extends Authenticatable
     public function devices()
     {
         return $this->belongsToMany(Device::class, 'user_devices');
+    }
+
+    // Collections
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
     }
 
     // public function googleToken() {

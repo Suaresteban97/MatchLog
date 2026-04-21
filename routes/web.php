@@ -8,6 +8,7 @@ use App\Http\Controllers\Frontend\DashboardController;
 use App\Http\Controllers\Frontend\DeviceController;
 use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\CatalogController;
+use App\Http\Controllers\Frontend\Admin\ModerationViewController;
 
 // ...
 
@@ -37,4 +38,11 @@ Route::middleware(['web.auth'])->group(function () {
     Route::get('/devices/create', [DeviceController::class, 'create']);
     Route::get('/devices/{id}/edit', [DeviceController::class, 'edit']);
     Route::get('/profile', [ProfileController::class, 'edit']);
+
+    /**
+     * Admin (Moderation Panel)
+     */
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/moderation', [ModerationViewController::class, 'index']);
+    });
 });

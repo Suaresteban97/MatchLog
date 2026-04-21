@@ -92,4 +92,55 @@ class ContributionService
             ->paginate($perPage)
             ->withQueryString();
     }
+
+    /**
+     * Get pending contributions for the moderation panel.
+     */
+    public function getPendingContributions(int $perPage = 15): LengthAwarePaginator
+    {
+        return Contribution::with(['user:id,name', 'contributable'])
+            ->where('status', 'pending')
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
+     * Resolve a pending contribution.
+     * If approved, dynamically updates the target model.
+     *
+     * @param int $id The contribution ID
+     * @param string $status 'approved' | 'rejected'
+     * @param string|null $reviewerNotes
+     * @param User $reviewer
+     */
+    public function resolve(int $id, string $status, ?string $reviewerNotes, User $reviewer): Contribution
+    {
+        if (!in_array($status, ['approved', 'rejected'], true)) {
+            throw new \InvalidArgumentException('Status must be approved or rejected.');
+        }
+
+        $contribution = Contribution::findOrFail($id);
+
+        if ($contribution->status !== 'pending') {
+            throw new \InvalidArgumentException('This contribution has already been resolved.');
+        }
+
+        if ($status === 'approved') {
+            $modelClass = $contribution->contributable_type;
+            $resource = $modelClass::findOrFail($contribution->contributable_id);
+            
+            // Reflexively update the field
+            $resource->setAttribute($contribution->field, $contribution->proposed_value);
+            $resource->save();
+        }
+
+        $contribution->status = $status;
+        $contribution->reviewer_id = $reviewer->id;
+        $contribution->rejection_reason = $reviewerNotes;
+        $contribution->reviewed_at = now();
+        $contribution->save();
+
+        return $contribution;
+    }
 }

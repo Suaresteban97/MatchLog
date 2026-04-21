@@ -4,6 +4,9 @@ import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { useSessions } from '../../Composables/useSessions';
 import { useGames } from '../../Composables/useGames';
+import CollectionsPanel from './Components/Collections/CollectionsPanel.vue';
+
+const activeTab = ref('sesiones'); // 'sesiones' or 'colecciones'
 
 const {
     browseSessions, mySessions, sessionForm,
@@ -324,21 +327,39 @@ onMounted(() => {
 
 <template>
 
-    <Head title="Social" />
+    <Head title="Mi Espacio" />
 
     <AppLayout v-cloak>
         <div class="row pt-4 g-4">
 
-            <!-- ===================== HEADER ===================== -->
-            <div class="col-12 d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-satellite-dish me-2 text-primary"></i>
-                    Social — Sesiones de Juego
-                </h4>
-                <button @click="openCreateModal" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Nueva Sesión
-                </button>
+            <!-- ===================== TABS NAVIGATION ===================== -->
+            <div class="col-12">
+                 <ul class="nav nav-pills mb-4 border-bottom border-secondary pb-3 gap-2">
+                     <li class="nav-item">
+                         <button class="nav-link border" 
+                            :class="activeTab === 'sesiones' ? 'active bg-primary border-primary text-white' : 'bg-dark text-muted border-secondary'" 
+                            @click="activeTab = 'sesiones'">
+                            <i class="fas fa-satellite-dish me-2"></i>Sesiones Multi-jugador
+                         </button>
+                     </li>
+                     <li class="nav-item">
+                         <button class="nav-link border" 
+                            :class="activeTab === 'colecciones' ? 'active bg-primary border-primary text-white' : 'bg-dark text-muted border-secondary'" 
+                            @click="activeTab = 'colecciones'">
+                            <i class="fas fa-compact-disc me-2"></i>Mis Colecciones
+                         </button>
+                     </li>
+                 </ul>
             </div>
+
+            <!-- ===================== SESIONES TAB ===================== -->
+            <template v-if="activeTab === 'sesiones'">
+                <div class="col-12 d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0 text-white">Sesiones de Juego</h5>
+                    <button @click="openCreateModal" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nueva Sesión
+                    </button>
+                </div>
 
             <!-- ===================== BROWSE SESSIONS ===================== -->
             <div class="col-12">
@@ -590,7 +611,14 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
+            </template>
 
+            <!-- ===================== COLECCIONES TAB ===================== -->
+            <template v-else-if="activeTab === 'colecciones'">
+                <div class="col-12">
+                     <CollectionsPanel />
+                </div>
+            </template>
         </div>
 
         <!-- ===================== MODAL CREATE/EDIT ===================== -->

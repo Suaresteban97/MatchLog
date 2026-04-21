@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\SocialProfileController;
 use App\Http\Controllers\Api\GamesController;
 use App\Http\Controllers\Api\RawgController;
 use App\Http\Controllers\Api\ContributionController;
+use App\Http\Controllers\Api\Admin\ModerationController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -57,6 +58,21 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      * Users Methods
      */
     Route::resource('users', UserController::class);
+
+    /**
+     * Collections Methods
+     */
+    Route::resource('collections', \App\Http\Controllers\Api\CollectionController::class);
+    Route::post('collections/{collection}/games/{game}', [\App\Http\Controllers\Api\CollectionController::class, 'addGame']);
+    Route::delete('collections/{collection}/games/{game}', [\App\Http\Controllers\Api\CollectionController::class, 'removeGame']);
+
+    /**
+     * Admin (Moderation Panel)
+     */
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/contributions', [ModerationController::class, 'index']);
+        Route::post('/admin/contributions/{id}/resolve', [ModerationController::class, 'resolve']);
+    });
 
     /**
      * Devices
