@@ -666,7 +666,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: flex;
     flex-direction: column;
     z-index: 9999;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .chat-header {
@@ -676,7 +676,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Chat override for online-dot */
 .chat-widget .online-dot {
-    border: 2px solid #212529; /* Matches Bootstrap .bg-dark */
+    border: 2px solid #212529;
+    /* Matches Bootstrap .bg-dark */
 }
 
 .chat-messages {
@@ -685,11 +686,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: flex;
     flex-direction: column;
 }
+
 .chat-messages::-webkit-scrollbar {
     width: 6px;
 }
+
 .chat-messages::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }
 
@@ -796,7 +799,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 1.1rem;
     font-weight: 700;
     color: hsl(220 14% 92%);
-    padding-right: 2rem; /* room for close btn */
+    padding-right: 2rem;
+    /* room for close btn */
 }
 
 .cf-modal__close {
@@ -845,7 +849,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     letter-spacing: 0.05em;
 }
 
-.cf-required { color: hsl(258 80% 68%); }
+.cf-required {
+    color: hsl(258 80% 68%);
+}
 
 .cf-select,
 .cf-textarea {
@@ -919,8 +925,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: hsl(0 70% 72%);
 }
 
-.cf-feedback__icon { font-size: 1.1rem; flex-shrink: 0; }
-.cf-feedback p { margin: 0.2rem 0 0; }
+.cf-feedback__icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.cf-feedback p {
+    margin: 0.2rem 0 0;
+}
 
 /* ── Actions ──────────────────────────────────────────────────────────────── */
 .cf-actions {
@@ -943,17 +955,30 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transition: opacity 0.2s, transform 0.1s, background 0.2s;
 }
 
-.cf-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.cf-btn:not(:disabled):active { transform: scale(0.97); }
+.cf-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
 
-.cf-btn--primary { background: hsl(258 80% 55%); color: #fff; }
-.cf-btn--primary:not(:disabled):hover { background: hsl(258 80% 63%); }
+.cf-btn:not(:disabled):active {
+    transform: scale(0.97);
+}
+
+.cf-btn--primary {
+    background: hsl(258 80% 55%);
+    color: #fff;
+}
+
+.cf-btn--primary:not(:disabled):hover {
+    background: hsl(258 80% 63%);
+}
 
 .cf-btn--ghost {
     background: transparent;
     border: 1px solid hsl(220 14% 26%);
     color: hsl(220 14% 62%);
 }
+
 .cf-btn--ghost:not(:disabled):hover {
     border-color: hsl(220 14% 42%);
     color: hsl(220 14% 80%);
@@ -970,7 +995,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     animation: cf-spin 0.6s linear infinite;
 }
 
-@keyframes cf-spin { to { transform: rotate(360deg); } }
+@keyframes cf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 
 /* ── Modal transition (fade + scale) ─────────────────────────────────────── */
 .cf-modal-enter-active,
@@ -992,8 +1021,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform: scale(0.94) translateY(12px);
     opacity: 0;
 }
-
 .cf-modal-leave-to .cf-modal {
     transform: scale(0.96) translateY(6px);
     opacity: 0;
+}
+
+/* Ocultar scrollbars manteniendo la funcionalidad de scroll */
+.hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
 }

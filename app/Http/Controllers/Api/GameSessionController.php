@@ -114,6 +114,24 @@ class GameSessionController extends Controller
         }
     }
 
+    public function handleRequest(Request $request, $id, $userId)
+    {
+        $action = $request->input('action'); // 'accept' or 'reject'
+        if (!in_array($action, ['accept', 'reject'])) {
+            return response()->json(['message' => 'Acción inválida'], 400);
+        }
+
+        try {
+            $result = $this->sessionService->handleParticipantRequest($request->user(), $id, $userId, $action);
+            if (isset($result['status']) && $result['status'] === 'error') {
+                return response()->json(['message' => $result['message']], 400);
+            }
+            return response()->json(['message' => $result['message']], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sesión o solicitud no encontrada'], 404);
+        }
+    }
+
     /**
      * List all open/public game sessions.
      */
