@@ -84,10 +84,32 @@ class GameSessionService
         GameSessionParticipant::create([
             'game_session_id' => $sessionId,
             'user_id' => $user->id,
-            'status' => 'accepted'
+            'status' => 'pending' // Changed to pending for request system
         ]);
 
-        return ['status' => 'success', 'message' => 'Te uniste a la sesión correctamente'];
+        return ['status' => 'success', 'message' => 'Solicitud enviada. El anfitrión debe aprobarla.'];
+    }
+
+    public function handleParticipantRequest(User $host, $sessionId, $userId, $action)
+    {
+        $session = GameSession::where('id', $sessionId)->where('host_id', $host->id)->firstOrFail();
+        
+        $participant = GameSessionParticipant::where('game_session_id', $sessionId)
+            ->where('user_id', $userId)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        if ($action === 'accept') {
+            $currentParticipants = $session->participants()->where('game_session_participants.status', 'accepted')->count();
+            if ($currentParticipants >= $session->max_participants) {
+                return ['status' => 'error', 'message' => 'La sesión ya está llena.'];
+            }
+            $participant->update(['status' => 'accepted']);
+            return ['status' => 'success', 'message' => 'Solicitud aprobada.'];
+        }
+
+        $participant->update(['status' => 'rejected']);
+        return ['status' => 'success', 'message' => 'Solicitud rechazada.'];
     }
 
     public function leaveSession(User $user, $sessionId)

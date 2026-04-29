@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\GamesController;
 use App\Http\Controllers\Api\RawgController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\Admin\ModerationController;
+use App\Http\Controllers\Api\PostController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -134,6 +135,7 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::get('/sessions/browse', [GameSessionController::class, 'browse']);
     Route::post('/sessions/{id}/join', [GameSessionController::class, 'join']);
     Route::post('/sessions/{id}/leave', [GameSessionController::class, 'leave']);
+    Route::post('/sessions/{id}/requests/{userId}', [GameSessionController::class, 'handleRequest']);
     Route::apiResource('sessions', GameSessionController::class);
 
     // Chat endpoints
@@ -159,6 +161,14 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::put('/my-games/{id}', [GamesController::class, 'updateUserGame']);
     Route::post('/my-games/{id}/toggle', [GamesController::class, 'toggleUserGame']);
     Route::patch('/my-games/{id}/status', [GamesController::class, 'changeStatus']);
+
+    /**
+     * Posts & Dashboard Feed
+     */
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+    Route::get('/dashboard/suggestions', [PostController::class, 'suggestions']);
+    Route::get('/dashboard/recent-games', [PostController::class, 'recentGames']);
 
     /**
      * Community Contributions
