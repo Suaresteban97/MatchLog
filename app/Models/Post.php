@@ -47,4 +47,22 @@ class Post extends Model
     {
         return $this->belongsTo(UserDevice::class);
     }
+
+    public function comments()
+    {
+        return $this->hasMany(PostComment::class)
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->latest();
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
+    public function isLikedBy(User $user): bool
+    {
+        return $this->likes()->where('user_id', $user->id)->exists();
+    }
 }

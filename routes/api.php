@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\RawgController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\Admin\ModerationController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\PostInteractionController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -167,6 +168,11 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      */
     Route::get('/posts', [PostController::class, 'index']);
     Route::post('/posts', [PostController::class, 'store']);
+    Route::post('/posts/{post}/like', [PostInteractionController::class, 'toggleLike']);
+    Route::get('/posts/{post}/comments', [PostInteractionController::class, 'comments']);
+    Route::post('/posts/{post}/comments', [PostInteractionController::class, 'storeComment']);
+    Route::delete('/posts/{post}/comments/{comment}', [PostInteractionController::class, 'destroyComment']);
+    Route::post('/post-comments/{comment}/like', [PostInteractionController::class, 'toggleCommentLike']);
     Route::get('/dashboard/suggestions', [PostController::class, 'suggestions']);
     Route::get('/dashboard/recent-games', [PostController::class, 'recentGames']);
 
