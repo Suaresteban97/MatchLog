@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { useDashboard } from '../../Composables/useDashboard';
@@ -16,12 +16,32 @@ const myGames = ref([]);
 const myDevices = ref([]);
 const myCollections = ref([]);
 
+const selectedCollection = ref(null);
+const loadingCollection = ref(false);
+
+const openCollection = async (collection) => {
+    selectedCollection.value = { ...collection, games: [] };
+    loadingCollection.value = true;
+    try {
+        const res = await get(`/collections/${collection.id}`);
+        selectedCollection.value = res.data || res;
+    } catch (e) {
+        console.error('Error loading collection:', e);
+    } finally {
+        loadingCollection.value = false;
+    }
+};
+
 const newPost = ref({
     content: '',
     game_id: '',
     user_device_id: '',
     collection_id: '',
-    share_social_profile: false
+    share_social_profile: localStorage.getItem('share_social_profile') === 'true'
+});
+
+watch(() => newPost.value.share_social_profile, (newVal) => {
+    localStorage.setItem('share_social_profile', newVal);
 });
 
 const isSubmitting = ref(false);
@@ -65,7 +85,7 @@ const submitPost = async () => {
         newPost.value.game_id = '';
         newPost.value.user_device_id = '';
         newPost.value.collection_id = '';
-        newPost.value.share_social_profile = false;
+        // Note: we don't reset share_social_profile to false, it keeps the cached value
     }
     isSubmitting.value = false;
 };
@@ -113,6 +133,127 @@ const requestJoinSession = async (session) => {
     const res = await joinSession(session.id);
     if (res && res.message) {
         alert(res.message);
+    }
+};
+
+// ─────────────── LIKES ───────────────
+const { post: apiPost } = useApi();
+
+const toggleLike = async (post) => {
+    try {
+        const res = await apiPost(`/posts/${post.id}/like`);
+        post.user_liked = res.liked;
+        post.likes_count = res.likes_count;
+    } catch (e) {
+        console.error('Error toggling like:', e);
+    }
+};
+
+// ─────────────── COMMENTS MODAL ───────────────
+const activePost      = ref(null);
+const comments        = ref([]);       // flat list from API
+const loadingComments = ref(false);
+const newComment      = ref('');
+const activeReplyId   = ref(null);
+const replyTexts      = ref({});
+const submittingComment = ref(false);
+
+// Build a flat sorted tree: root comments in order, with children interleaved
+const buildFlatTree = (flat) => {
+    const map = {};
+    flat.forEach(c => { map[c.id] = { ...c, _children: [] }; });
+
+    const roots = [];
+    flat.forEach(c => {
+        if (c.parent_id && map[c.parent_id]) {
+            map[c.parent_id]._children.push(map[c.id]);
+        } else if (!c.parent_id) {
+            roots.push(map[c.id]);
+        }
+    });
+
+    const flatten = (nodes, depth = 0) => {
+        const result = [];
+        nodes.forEach(node => {
+            result.push({ ...node, _depth: depth });
+            if (node._children.length) result.push(...flatten(node._children, depth + 1));
+        });
+        return result;
+    };
+    return flatten(roots);
+};
+
+const flatComments = computed(() => buildFlatTree(comments.value));
+
+const openComments = async (post) => {
+    activePost.value = post;
+    comments.value   = [];
+    activeReplyId.value = null;
+    replyTexts.value = {};
+    loadingComments.value = true;
+    try {
+        const res = await get(`/posts/${post.id}/comments`);
+        comments.value = res.data || [];
+    } catch (e) {
+        console.error('Error loading comments:', e);
+    } finally {
+        loadingComments.value = false;
+    }
+};
+
+const closeComments = () => {
+    activePost.value = null;
+    newComment.value = '';
+    activeReplyId.value = null;
+    replyTexts.value = {};
+};
+
+const toggleReplyBox = (commentId) => {
+    activeReplyId.value = activeReplyId.value === commentId ? null : commentId;
+    if (!replyTexts.value[commentId]) replyTexts.value[commentId] = '';
+};
+
+const submitComment = async (parentId = null) => {
+    if (!activePost.value) return;
+    const body = parentId ? replyTexts.value[parentId] : newComment.value;
+    if (!body?.trim()) return;
+
+    submittingComment.value = true;
+    try {
+        const payload = { body };
+        if (parentId) payload.parent_id = parentId;
+
+        const res = await apiPost(`/posts/${activePost.value.id}/comments`, payload);
+        if (res.success) {
+            // Initialise fields the server would compute for the current user
+            res.data.user_liked  = false;
+            res.data.likes_count = 0;
+            // Push to flat list — buildFlatTree will place it correctly
+            comments.value.push(res.data);
+
+            if (parentId) {
+                replyTexts.value[parentId] = '';
+                activeReplyId.value = null;
+            } else {
+                newComment.value = '';
+            }
+            if (activePost.value) activePost.value.comments_count = (activePost.value.comments_count || 0) + 1;
+        }
+    } catch (e) {
+        console.error('Error submitting comment:', e);
+    } finally {
+        submittingComment.value = false;
+    }
+};
+
+const toggleCommentLike = async (comment) => {
+    try {
+        const res = await apiPost(`/post-comments/${comment.id}/like`);
+        // Mutate in the flat list so reactivity propagates
+        const item = comments.value.find(c => c.id === comment.id);
+        if (item) { item.user_liked = res.liked; item.likes_count = res.likes_count; }
+    } catch (e) {
+        console.error('Error liking comment:', e);
     }
 };
 </script>
@@ -289,22 +430,40 @@ const requestJoinSession = async (session) => {
                                 </div>
                                 
                                 <div v-if="post.collection" class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-layer-group text-success me-2"></i>
-                                    <span>Colección: <strong>{{ post.collection.name }}</strong></span>
+                                    <span class="me-2 text-muted small">Colección:</span>
+                                    <button @click="openCollection(post.collection)" class="btn btn-sm d-flex align-items-center gap-2 bg-dark border border-secondary text-light px-2 py-1 rounded">
+                                        <i class="fas fa-layer-group text-success"></i>
+                                        <span class="text-truncate" style="max-width: 180px; font-size: 0.85rem;">{{ post.collection.name }}</span>
+                                        <i class="fas fa-arrow-right text-muted small"></i>
+                                    </button>
                                 </div>
 
                                 <div v-if="post.share_social_profile && post.user.social_profiles && post.user.social_profiles.length > 0" class="mt-3 pt-2 border-top border-dark">
                                     <span class="d-block small mb-1 text-muted">Perfiles Sociales:</span>
-                                    <span v-for="sp in post.user.social_profiles" :key="sp.id" class="badge bg-dark border border-secondary me-1">
-                                        <i class="fas fa-gamepad text-primary"></i> 
-                                        {{ sp.social_platform ? sp.social_platform.name : 'Plataforma' }}: {{ sp.gamertag }}
-                                    </span>
+                                    <template v-for="sp in post.user.social_profiles" :key="sp.id">
+                                        <a v-if="sp.profile_url" :href="sp.profile_url" target="_blank" class="badge bg-dark border border-secondary me-1 text-decoration-none text-light hover-opacity">
+                                            <i class="fas fa-gamepad text-primary"></i> 
+                                            {{ sp.social_platform ? sp.social_platform.name : 'Plataforma' }}: {{ sp.gamertag }}
+                                        </a>
+                                        <span v-else class="badge bg-dark border border-secondary me-1">
+                                            <i class="fas fa-gamepad text-primary"></i> 
+                                            {{ sp.social_platform ? sp.social_platform.name : 'Plataforma' }}: {{ sp.gamertag }}
+                                        </span>
+                                    </template>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer bg-transparent border-secondary d-flex gap-3 py-3">
-                            <button class="btn btn-sm btn-link text-light text-decoration-none p-0"><i class="far fa-heart me-1"></i> Me gusta</button>
-                            <button class="btn btn-sm btn-link text-light text-decoration-none p-0"><i class="far fa-comment me-1"></i> Comentar</button>
+                            <!-- Like -->
+                            <button @click="toggleLike(post)" class="btn btn-sm btn-link text-decoration-none p-0 d-flex align-items-center gap-1" :class="post.user_liked ? 'text-danger' : 'text-muted'">
+                                <i :class="post.user_liked ? 'fas fa-heart' : 'far fa-heart'"></i>
+                                <span>{{ post.likes_count || 0 }}</span>
+                            </button>
+                            <!-- Comment -->
+                            <button @click="openComments(post)" class="btn btn-sm btn-link text-muted text-decoration-none p-0 d-flex align-items-center gap-1">
+                                <i class="far fa-comment"></i>
+                                <span>{{ post.comments_count || 0 }}</span>
+                            </button>
                         </div>
                     </div>
                     
@@ -357,4 +516,184 @@ const requestJoinSession = async (session) => {
 
         </div>
     </AppLayout>
+
+    <!-- Comments Modal -->
+    <Teleport to="body">
+        <Transition name="modal-fade">
+            <div v-if="activePost" class="modal-backdrop-custom" @click.self="closeComments">
+                <div class="comments-modal">
+                    <!-- Header -->
+                    <div class="collection-modal-header">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="collection-icon-wrap" style="background:rgba(15,240,252,0.1);border-color:rgba(15,240,252,0.25)">
+                                <i class="fas fa-comments fa-lg text-info"></i>
+                            </div>
+                            <div>
+                                <p class="text-muted small mb-0 text-uppercase">Comentarios</p>
+                                <h5 class="mb-0 fw-bold text-truncate" style="max-width:400px">{{ activePost.content.slice(0,60) }}{{ activePost.content.length > 60 ? '...' : '' }}</h5>
+                            </div>
+                        </div>
+                        <button @click="closeComments" class="btn-close btn-close-white"></button>
+                    </div>
+
+                    <!-- Root comment input -->
+                    <div class="px-4 pt-3 pb-2 border-bottom border-secondary">
+                        <div class="d-flex gap-2">
+                            <textarea
+                                v-model="newComment"
+                                @keydown.enter.ctrl="submitComment(null)"
+                                class="form-control form-control-sm bg-secondary text-light border-0"
+                                placeholder="Escribe un comentario..."
+                                rows="2"
+                                style="resize:none"
+                            ></textarea>
+                            <button @click="submitComment(null)" :disabled="submittingComment || !newComment.trim()" class="btn btn-primary btn-sm px-3">
+                                <i v-if="submittingComment" class="fas fa-spinner fa-spin"></i>
+                                <i v-else class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <p class="text-muted small mt-1 mb-0">Ctrl+Enter para enviar</p>
+                    </div>
+
+                    <!-- Comments list -->
+                    <div class="comments-list hide-scrollbar">
+                        <div v-if="loadingComments" class="text-center py-5">
+                            <div class="spinner-border text-info spinner-border-sm" role="status"></div>
+                            <p class="text-muted small mt-2">Cargando comentarios...</p>
+                        </div>
+
+                        <div v-else-if="comments.length === 0" class="text-center py-5 text-muted">
+                            <i class="fas fa-comment-slash fa-2x mb-3 opacity-50"></i>
+                            <p>Sé el primero en comentar.</p>
+                        </div>
+
+                        <div v-else class="px-3 py-3 d-flex flex-column gap-3">
+                            <template v-for="comment in flatComments" :key="comment.id">
+                                <!-- Indent based on depth, max 240px -->
+                                <div :style="{ marginLeft: Math.min(comment._depth * 32, 240) + 'px' }" class="d-flex gap-2">
+                                    <!-- Depth indicator line -->
+                                    <div v-if="comment._depth > 0" class="border-start border-secondary" style="width:3px; flex-shrink:0; border-radius:2px"></div>
+
+                                    <div class="flex-grow-1">
+                                        <!-- Bubble -->
+                                        <div class="bg-secondary rounded p-2 px-3">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <div class="avatar-sm" style="width:26px;height:26px;font-size:0.7rem;flex-shrink:0">{{ comment.user?.name?.charAt(0).toUpperCase() }}</div>
+                                                <span class="fw-bold small">{{ comment.user?.name }}</span>
+                                                <span v-if="comment._depth > 0" class="text-muted small">
+                                                    <i class="fas fa-reply fa-xs"></i>
+                                                </span>
+                                            </div>
+                                            <p class="mb-0 small" style="white-space:pre-wrap; padding-left: 34px;">{{ comment.body }}</p>
+                                        </div>
+
+                                        <!-- Actions -->
+                                        <div class="d-flex align-items-center gap-3 mt-1 ms-1">
+                                            <span class="text-muted" style="font-size:0.72rem">{{ formatDate(comment.created_at) }}</span>
+                                            <button @click="toggleCommentLike(comment)" class="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-1" :class="comment.user_liked ? 'text-danger' : 'text-muted'" style="font-size:0.72rem">
+                                                <i :class="comment.user_liked ? 'fas fa-heart' : 'far fa-heart'"></i>
+                                                <span>{{ comment.likes_count || 0 }}</span>
+                                            </button>
+                                            <button @click="toggleReplyBox(comment.id)" class="btn btn-link p-0 text-muted text-decoration-none" style="font-size:0.72rem">
+                                                <i class="fas fa-reply fa-xs me-1"></i>Responder
+                                            </button>
+                                        </div>
+
+                                        <!-- Inline reply box -->
+                                        <div v-if="activeReplyId === comment.id" class="mt-2 d-flex gap-2">
+                                            <textarea
+                                                v-model="replyTexts[comment.id]"
+                                                @keydown.enter.ctrl="submitComment(comment.id)"
+                                                class="form-control form-control-sm bg-secondary text-light border-secondary"
+                                                :placeholder="'Respondiendo a ' + (comment.user?.name || '...') + '...' "
+                                                rows="2"
+                                                style="resize:none"
+                                            ></textarea>
+                                            <div class="d-flex flex-column gap-1">
+                                                <button @click="submitComment(comment.id)" :disabled="submittingComment || !replyTexts[comment.id]?.trim()" class="btn btn-primary btn-sm px-2">
+                                                    <i v-if="submittingComment" class="fas fa-spinner fa-spin"></i>
+                                                    <i v-else class="fas fa-paper-plane"></i>
+                                                </button>
+                                                <button @click="toggleReplyBox(comment.id)" class="btn btn-sm btn-secondary px-2">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+
+    <!-- Collection Detail Modal -->
+    <Teleport to="body">
+        <Transition name="modal-fade">
+            <div v-if="selectedCollection" class="modal-backdrop-custom" @click.self="selectedCollection = null">
+                <div class="collection-modal">
+                    <!-- Header -->
+                    <div class="collection-modal-header">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="collection-icon-wrap">
+                                <i class="fas fa-layer-group fa-lg text-success"></i>
+                            </div>
+                            <div>
+                                <p class="text-muted small mb-0 text-uppercase tracking-wide">Colección</p>
+                                <h4 class="mb-0 fw-bold">{{ selectedCollection.name }}</h4>
+                            </div>
+                        </div>
+                        <button @click="selectedCollection = null" class="btn-close btn-close-white" aria-label="Cerrar"></button>
+                    </div>
+
+                    <!-- Description -->
+                    <p v-if="selectedCollection.description" class="text-muted px-4 pt-3 mb-0">{{ selectedCollection.description }}</p>
+
+                    <!-- Loading -->
+                    <div v-if="loadingCollection" class="text-center py-5">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted mt-3 small">Cargando juegos de la colección...</p>
+                    </div>
+
+                    <!-- Games Grid -->
+                    <div v-else class="collection-games-grid px-4 pb-4 pt-3">
+                        <div v-if="selectedCollection.games && selectedCollection.games.length === 0" class="text-center py-5 text-muted">
+                            <i class="fas fa-box-open fa-3x mb-3 opacity-50"></i>
+                            <p>Esta colección no tiene juegos aún.</p>
+                        </div>
+
+                        <div v-else class="games-masonry">
+                            <a
+                                v-for="game in selectedCollection.games"
+                                :key="game.id"
+                                :href="'/games/' + (game.slug || game.id)"
+                                target="_blank"
+                                class="collection-game-card text-decoration-none"
+                            >
+                                <div class="collection-game-cover">
+                                    <img v-if="game.cover_image_url" :src="game.cover_image_url" :alt="game.name" class="collection-cover-img">
+                                    <div v-else class="collection-cover-placeholder">
+                                        <i class="fas fa-gamepad fa-2x text-muted"></i>
+                                    </div>
+                                    <div class="collection-cover-overlay">
+                                        <i class="fas fa-external-link-alt text-white"></i>
+                                    </div>
+                                </div>
+                                <p class="collection-game-name">{{ game.name }}</p>
+                            </a>
+                        </div>
+
+                        <p class="text-muted small mt-3 text-end">
+                            <i class="fas fa-gamepad me-1"></i>
+                            {{ selectedCollection.games?.length || 0 }} juego(s)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
 </template>

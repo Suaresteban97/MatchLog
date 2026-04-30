@@ -25,9 +25,9 @@
     /* Deep blue/ink accent */
     --neon-pink: #a52a2a;
     /* Dark red/vintage accent */
-    --text-main: #2b2b2b;
+    --text-main: #000000;
     /* Dark text */
-    --text-muted: #5e5e5e;
+    --text-muted: #333333;
     /* Softer dark text */
     --border-color: #d1bfae;
     /* Old border */
@@ -56,7 +56,9 @@
     color: var(--text-main) !important;
 }
 
-.theme-vintage .text-white {
+.theme-vintage .text-white,
+.theme-vintage .text-light,
+.theme-vintage h1, .theme-vintage h2, .theme-vintage h3, .theme-vintage h4, .theme-vintage h5, .theme-vintage h6 {
     color: var(--text-main) !important;
 }
 
@@ -71,6 +73,10 @@
 
 .theme-vintage .bg-dark {
     background-color: var(--bg-card) !important;
+}
+
+.theme-vintage .bg-secondary {
+    background-color: #d1c5a1 !important; /* Slightly darker vintage paper for contrast */
 }
 
 .theme-vintage input[type="date"],
@@ -1030,6 +1036,170 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+}
+
+/* ── Dashboard Modals (Collections & Comments) ───────────────────────────── */
+.modal-backdrop-custom {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.collection-modal {
+    background: var(--bg-card, #121217);
+    border: 1px solid var(--border-color, #27272a);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+
+.comments-modal {
+    background: var(--bg-card, #121217);
+    border: 1px solid var(--border-color, #27272a);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 620px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+
+.comments-list {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.collection-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color, #27272a);
+    background: rgba(255,255,255,0.02);
+}
+
+.collection-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(25, 200, 100, 0.12);
+    border: 1px solid rgba(25, 200, 100, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collection-games-grid {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.collection-games-grid::-webkit-scrollbar { width: 4px; }
+.collection-games-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+.games-masonry {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+}
+
+.collection-game-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+}
+
+.collection-game-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #27272a);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.collection-game-card:hover .collection-game-cover {
+    transform: scale(1.04);
+    border-color: var(--neon-purple, #bc13fe);
+}
+
+.collection-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.collection-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-card, #121217);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collection-cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.collection-game-card:hover .collection-cover-overlay {
+    opacity: 1;
+}
+
+.collection-game-name {
+    font-size: 0.75rem;
+    color: var(--text-muted, #a1a1aa);
+    margin: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Modal transition */
+.modal-fade-enter-active, .modal-fade-leave-active {
+    transition: opacity 0.25s ease;
+}
+.modal-fade-enter-from, .modal-fade-leave-to {
+    opacity: 0;
+}
+.modal-fade-enter-active .collection-modal,
+.modal-fade-leave-active .collection-modal,
+.modal-fade-enter-active .comments-modal,
+.modal-fade-leave-active .comments-modal {
+    transition: transform 0.25s ease;
+}
+.modal-fade-enter-from .collection-modal,
+.modal-fade-leave-to .collection-modal,
+.modal-fade-enter-from .comments-modal,
+.modal-fade-leave-to .comments-modal {
+    transform: scale(0.95) translateY(12px);
 }
 .hide-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */

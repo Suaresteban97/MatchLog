@@ -12,21 +12,29 @@ use App\Http\Requests\Posts\StorePostRequest;
 
 class PostController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Get feed with relations
         $posts = Post::with([
-            'user.socialProfiles.socialPlatform', 
-            'game', 
-            'collection', 
-            'gameSession.host', 
+            'user.socialProfiles.socialPlatform',
+            'game',
+            'collection',
+            'gameSession.host',
             'gameSession.participants',
-            'userDevice.device', 
+            'userDevice.device',
             'userDevice.characteristics'
         ])
-        ->latest()
-        ->paginate(15);
-        
+            ->withCount(['likes', 'comments'])
+            ->latest()
+            ->paginate(5);
+
+        // Append user_liked flag per post
+        $userId = $request->user()->id;
+        $posts->getCollection()->transform(function ($post) use ($userId) {
+            $post->user_liked = $post->likes()->where('user_id', $userId)->exists();
+            return $post;
+        });
+
         return response()->json($posts);
     }
 
@@ -39,11 +47,11 @@ class PostController extends Controller
         return response()->json([
             'success' => true,
             'data' => $post->load([
-                'user.socialProfiles.socialPlatform', 
-                'game', 
-                'collection', 
-                'gameSession', 
-                'userDevice.device', 
+                'user.socialProfiles.socialPlatform',
+                'game',
+                'collection',
+                'gameSession',
+                'userDevice.device',
                 'userDevice.characteristics'
             ])
         ]);
@@ -53,7 +61,7 @@ class PostController extends Controller
     {
         $user = $request->user();
         $perPage = $request->input('per_page', 15);
-        
+
         // Get user's top genres based on their games
         $topGenreIds = DB::table('user_games')
             ->join('game_genre', 'user_games.game_id', '=', 'game_genre.game_id')
@@ -72,9 +80,9 @@ class PostController extends Controller
         } else {
             // Get games from top genres that the user doesn't have
             $userGameIds = UserGame::where('user_id', $user->id)->pluck('game_id');
-            
+
             $suggestions = Game::with('genres', 'platforms')
-                ->whereHas('genres', function($q) use ($topGenreIds) {
+                ->whereHas('genres', function ($q) use ($topGenreIds) {
                     $q->whereIn('genres.id', $topGenreIds);
                 })
                 ->whereNotIn('id', $userGameIds)
@@ -96,7 +104,7 @@ class PostController extends Controller
             ->whereBetween('release_date', [$oneMonthAgo, $oneMonthAhead])
             ->orderByDesc('release_date')
             ->paginate($perPage);
-            
+
         return response()->json($recentGames);
     }
 }
