@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostComment;
 use App\Models\PostLike;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class PostInteractionController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService) {}
+
     // ──────────────────── LIKES ────────────────────
 
     public function toggleLike(Request $request, Post $post)
@@ -25,6 +28,14 @@ class PostInteractionController extends Controller
         } else {
             PostLike::create(['post_id' => $post->id, 'user_id' => $user->id]);
             $liked = true;
+
+            // Notify post owner
+            $this->notificationService->send(
+                $post->user_id,
+                $user->id,
+                'post_like',
+                $post
+            );
         }
 
         return response()->json([
@@ -77,6 +88,23 @@ class PostInteractionController extends Controller
 
         $comment->load('user');
 
+        // Notify: if it's a reply, notify the parent comment author; otherwise, notify the post owner
+        if (!empty($validated['parent_id'])) {
+            $this->notificationService->send(
+                $parent->user_id,
+                $request->user()->id,
+                'comment_reply',
+                $comment
+            );
+        } else {
+            $this->notificationService->send(
+                $post->user_id,
+                $request->user()->id,
+                'post_comment',
+                $post
+            );
+        }
+
         return response()->json(['success' => true, 'data' => $comment], 201);
     }
 
@@ -102,6 +130,14 @@ class PostInteractionController extends Controller
         } else {
             \App\Models\CommentLike::create(['post_comment_id' => $comment->id, 'user_id' => $user->id]);
             $liked = true;
+
+            // Notify comment author
+            $this->notificationService->send(
+                $comment->user_id,
+                $user->id,
+                'comment_like',
+                $comment
+            );
         }
 
         return response()->json([

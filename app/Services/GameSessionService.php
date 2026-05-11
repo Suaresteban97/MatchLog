@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class GameSessionService
 {
+    public function __construct(protected NotificationService $notificationService) {}
     public function getHostingSessions(User $user)
     {
         return $user->sessionsHosting()->with('participants', 'host')->get();
@@ -87,6 +88,14 @@ class GameSessionService
             'status' => 'pending' // Changed to pending for request system
         ]);
 
+        // Notify the session host
+        $this->notificationService->send(
+            $session->host_id,
+            $user->id,
+            'session_request',
+            $session
+        );
+
         return ['status' => 'success', 'message' => 'Solicitud enviada. El anfitrión debe aprobarla.'];
     }
 
@@ -105,6 +114,15 @@ class GameSessionService
                 return ['status' => 'error', 'message' => 'La sesión ya está llena.'];
             }
             $participant->update(['status' => 'accepted']);
+
+            // Notify the participant that they were accepted
+            $this->notificationService->send(
+                (int) $userId,
+                $host->id,
+                'session_join',
+                $session
+            );
+
             return ['status' => 'success', 'message' => 'Solicitud aprobada.'];
         }
 

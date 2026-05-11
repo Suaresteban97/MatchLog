@@ -3,11 +3,14 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { useApi } from '../Composables/useApi';
 import { ref, onMounted } from 'vue';
 import { useChat } from '../Composables/useChat';
+import { useNotifications } from '../Composables/useNotifications';
 import FriendsPanel from '../Pages/Frontend/Components/Social/FriendsPanel.vue';
 import GlobalChatWidget from '../Pages/Frontend/Components/Social/GlobalChatWidget.vue';
+import NotificationPanel from '../Pages/Frontend/Components/NotificationPanel.vue';
 
 const { post } = useApi();
 const { initGlobalEcho } = useChat();
+const { initNotificationEcho } = useNotifications();
 const page = usePage();
 
 const isVintage = ref(false);
@@ -31,6 +34,7 @@ onMounted(() => {
     const authUser = page.props.auth?.user;
     if (authUser) {
         initGlobalEcho(authUser.id);
+        initNotificationEcho(authUser.id);
     }
 });
 
@@ -85,6 +89,7 @@ const logout = async () => {
                         </li>
                     </ul>
                     <div class="d-flex align-items-center gap-3">
+                        <NotificationPanel />
                         <FriendsPanel />
 
                         <!-- Theme Toggle Button -->

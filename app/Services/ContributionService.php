@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ContributionService
 {
+    public function __construct(protected NotificationService $notificationService) {}
     /**
      * Submit a new community contribution (proposed change to a resource field).
      *
@@ -140,6 +141,16 @@ class ContributionService
         $contribution->rejection_reason = $reviewerNotes;
         $contribution->reviewed_at = now();
         $contribution->save();
+
+        // Notify the contributor about the resolution
+        $statusLabel = $status === 'approved' ? 'aprobada' : 'rechazada';
+        $this->notificationService->send(
+            $contribution->user_id,
+            $reviewer->id,
+            'contribution_resolved',
+            $contribution,
+            ['status' => $statusLabel]
+        );
 
         return $contribution;
     }

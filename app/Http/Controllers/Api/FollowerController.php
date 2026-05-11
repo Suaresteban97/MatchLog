@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\Follower\FollowRequest;
 
 class FollowerController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService) {}
     /**
      * Get authenticated user's followers.
      */
@@ -51,6 +53,13 @@ class FollowerController extends Controller
         }
 
         $request->user()->following()->attach($userId);
+
+        // Notify the followed user
+        $this->notificationService->send(
+            $userId,
+            $request->user()->id,
+            'follow'
+        );
 
         return response()->json(['message' => 'Ahora sigues a este usuario'], 201);
     }

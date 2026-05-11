@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class FriendshipController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService) {}
     /**
      * Get the list of accepted friends.
      */
@@ -98,6 +100,14 @@ class FriendshipController extends Controller
                 'status' => 'pending'
             ]);
 
+            // Notify the friend about the re-sent request
+            $this->notificationService->send(
+                $friendId,
+                $userId,
+                'friend_request',
+                $existing
+            );
+
             return response()->json(['message' => 'Solicitud enviada', 'data' => $existing], 201);
         }
 
@@ -106,6 +116,14 @@ class FriendshipController extends Controller
             'friend_id' => $friendId,
             'status' => 'pending',
         ]);
+
+        // Notify the friend about the new request
+        $this->notificationService->send(
+            $friendId,
+            $userId,
+            'friend_request',
+            $friendship
+        );
 
         return response()->json(['message' => 'Solicitud enviada', 'data' => $friendship], 201);
     }
@@ -136,6 +154,14 @@ class FriendshipController extends Controller
         }
 
         $friendship->update(['status' => 'accepted']);
+
+        // Notify the requester that their request was accepted
+        $this->notificationService->send(
+            $requesterId,
+            $userId,
+            'friend_accepted',
+            $friendship
+        );
 
         return response()->json(['message' => 'Solicitud aceptada', 'data' => $friendship], 200);
     }
