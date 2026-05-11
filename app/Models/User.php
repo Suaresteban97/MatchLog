@@ -186,6 +186,16 @@ class User extends Authenticatable
         return $this->hasMany(Post::class);
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->hasMany(Notification::class)->whereNull('read_at')->latest();
+    }
+
     public function simpleTransformer()
     {
         return [

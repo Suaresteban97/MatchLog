@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\Admin\ModerationController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\PostInteractionController;
+use App\Http\Controllers\Api\NotificationController;
 
 //Middlware
 use App\Http\Middleware\ApiMiddleware;
@@ -175,6 +176,14 @@ Route::middleware([ApiMiddleware::class])->group(function () {
     Route::post('/post-comments/{comment}/like', [PostInteractionController::class, 'toggleCommentLike']);
     Route::get('/dashboard/suggestions', [PostController::class, 'suggestions']);
     Route::get('/dashboard/recent-games', [PostController::class, 'recentGames']);
+
+    /**
+     * Notifications
+     */
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     /**
      * Community Contributions
