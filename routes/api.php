@@ -168,6 +168,7 @@ Route::middleware([ApiMiddleware::class])->group(function () {
      * Posts & Dashboard Feed
      */
     Route::get('/posts', [PostController::class, 'index']);
+    Route::get('/posts/{post}', [PostController::class, 'show']);
     Route::post('/posts', [PostController::class, 'store']);
     Route::post('/posts/{post}/like', [PostInteractionController::class, 'toggleLike']);
     Route::get('/posts/{post}/comments', [PostInteractionController::class, 'comments']);

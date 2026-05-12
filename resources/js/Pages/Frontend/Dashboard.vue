@@ -4,6 +4,7 @@ import { Head } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { useDashboard } from '../../Composables/useDashboard';
 import { useApi } from '../../Composables/useApi';
+import { usePostModal } from '../../Composables/usePostModal';
 
 defineProps({
     module: Number,
@@ -11,6 +12,7 @@ defineProps({
 
 const { posts, postsMeta, loadingPosts, suggestions, suggestionsMeta, loadingSuggestions, recentGames, recentGamesMeta, loadingRecentGames, fetchPosts, fetchSuggestions, fetchRecentGames, createPost, joinSession, loading } = useDashboard();
 const { get } = useApi();
+const { openPostModal } = usePostModal();
 
 const myGames = ref([]);
 const myDevices = ref([]);
@@ -146,114 +148,6 @@ const toggleLike = async (post) => {
         post.likes_count = res.likes_count;
     } catch (e) {
         console.error('Error toggling like:', e);
-    }
-};
-
-// ─────────────── COMMENTS MODAL ───────────────
-const activePost      = ref(null);
-const comments        = ref([]);       // flat list from API
-const loadingComments = ref(false);
-const newComment      = ref('');
-const activeReplyId   = ref(null);
-const replyTexts      = ref({});
-const submittingComment = ref(false);
-
-// Build a flat sorted tree: root comments in order, with children interleaved
-const buildFlatTree = (flat) => {
-    const map = {};
-    flat.forEach(c => { map[c.id] = { ...c, _children: [] }; });
-
-    const roots = [];
-    flat.forEach(c => {
-        if (c.parent_id && map[c.parent_id]) {
-            map[c.parent_id]._children.push(map[c.id]);
-        } else if (!c.parent_id) {
-            roots.push(map[c.id]);
-        }
-    });
-
-    const flatten = (nodes, depth = 0) => {
-        const result = [];
-        nodes.forEach(node => {
-            result.push({ ...node, _depth: depth });
-            if (node._children.length) result.push(...flatten(node._children, depth + 1));
-        });
-        return result;
-    };
-    return flatten(roots);
-};
-
-const flatComments = computed(() => buildFlatTree(comments.value));
-
-const openComments = async (post) => {
-    activePost.value = post;
-    comments.value   = [];
-    activeReplyId.value = null;
-    replyTexts.value = {};
-    loadingComments.value = true;
-    try {
-        const res = await get(`/posts/${post.id}/comments`);
-        comments.value = res.data || [];
-    } catch (e) {
-        console.error('Error loading comments:', e);
-    } finally {
-        loadingComments.value = false;
-    }
-};
-
-const closeComments = () => {
-    activePost.value = null;
-    newComment.value = '';
-    activeReplyId.value = null;
-    replyTexts.value = {};
-};
-
-const toggleReplyBox = (commentId) => {
-    activeReplyId.value = activeReplyId.value === commentId ? null : commentId;
-    if (!replyTexts.value[commentId]) replyTexts.value[commentId] = '';
-};
-
-const submitComment = async (parentId = null) => {
-    if (!activePost.value) return;
-    const body = parentId ? replyTexts.value[parentId] : newComment.value;
-    if (!body?.trim()) return;
-
-    submittingComment.value = true;
-    try {
-        const payload = { body };
-        if (parentId) payload.parent_id = parentId;
-
-        const res = await apiPost(`/posts/${activePost.value.id}/comments`, payload);
-        if (res.success) {
-            // Initialise fields the server would compute for the current user
-            res.data.user_liked  = false;
-            res.data.likes_count = 0;
-            // Push to flat list — buildFlatTree will place it correctly
-            comments.value.push(res.data);
-
-            if (parentId) {
-                replyTexts.value[parentId] = '';
-                activeReplyId.value = null;
-            } else {
-                newComment.value = '';
-            }
-            if (activePost.value) activePost.value.comments_count = (activePost.value.comments_count || 0) + 1;
-        }
-    } catch (e) {
-        console.error('Error submitting comment:', e);
-    } finally {
-        submittingComment.value = false;
-    }
-};
-
-const toggleCommentLike = async (comment) => {
-    try {
-        const res = await apiPost(`/post-comments/${comment.id}/like`);
-        // Mutate in the flat list so reactivity propagates
-        const item = comments.value.find(c => c.id === comment.id);
-        if (item) { item.user_liked = res.liked; item.likes_count = res.likes_count; }
-    } catch (e) {
-        console.error('Error liking comment:', e);
     }
 };
 </script>
@@ -460,7 +354,7 @@ const toggleCommentLike = async (comment) => {
                                 <span>{{ post.likes_count || 0 }}</span>
                             </button>
                             <!-- Comment -->
-                            <button @click="openComments(post)" class="btn btn-sm btn-link text-muted text-decoration-none p-0 d-flex align-items-center gap-1">
+                            <button @click="openPostModal(post)" class="btn btn-sm btn-link text-muted text-decoration-none p-0 d-flex align-items-center gap-1">
                                 <i class="far fa-comment"></i>
                                 <span>{{ post.comments_count || 0 }}</span>
                             </button>
@@ -517,117 +411,7 @@ const toggleCommentLike = async (comment) => {
         </div>
     </AppLayout>
 
-    <!-- Comments Modal -->
-    <Teleport to="body">
-        <Transition name="modal-fade">
-            <div v-if="activePost" class="modal-backdrop-custom" @click.self="closeComments">
-                <div class="comments-modal">
-                    <!-- Header -->
-                    <div class="collection-modal-header">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="collection-icon-wrap" style="background:rgba(15,240,252,0.1);border-color:rgba(15,240,252,0.25)">
-                                <i class="fas fa-comments fa-lg text-info"></i>
-                            </div>
-                            <div>
-                                <p class="text-muted small mb-0 text-uppercase">Comentarios</p>
-                                <h5 class="mb-0 fw-bold text-truncate" style="max-width:400px">{{ activePost.content.slice(0,60) }}{{ activePost.content.length > 60 ? '...' : '' }}</h5>
-                            </div>
-                        </div>
-                        <button @click="closeComments" class="btn-close btn-close-white"></button>
-                    </div>
 
-                    <!-- Root comment input -->
-                    <div class="px-4 pt-3 pb-2 border-bottom border-secondary">
-                        <div class="d-flex gap-2">
-                            <textarea
-                                v-model="newComment"
-                                @keydown.enter.ctrl="submitComment(null)"
-                                class="form-control form-control-sm bg-secondary text-light border-0"
-                                placeholder="Escribe un comentario..."
-                                rows="2"
-                                style="resize:none"
-                            ></textarea>
-                            <button @click="submitComment(null)" :disabled="submittingComment || !newComment.trim()" class="btn btn-primary btn-sm px-3">
-                                <i v-if="submittingComment" class="fas fa-spinner fa-spin"></i>
-                                <i v-else class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                        <p class="text-muted small mt-1 mb-0">Ctrl+Enter para enviar</p>
-                    </div>
-
-                    <!-- Comments list -->
-                    <div class="comments-list hide-scrollbar">
-                        <div v-if="loadingComments" class="text-center py-5">
-                            <div class="spinner-border text-info spinner-border-sm" role="status"></div>
-                            <p class="text-muted small mt-2">Cargando comentarios...</p>
-                        </div>
-
-                        <div v-else-if="comments.length === 0" class="text-center py-5 text-muted">
-                            <i class="fas fa-comment-slash fa-2x mb-3 opacity-50"></i>
-                            <p>Sé el primero en comentar.</p>
-                        </div>
-
-                        <div v-else class="px-3 py-3 d-flex flex-column gap-3">
-                            <template v-for="comment in flatComments" :key="comment.id">
-                                <!-- Indent based on depth, max 240px -->
-                                <div :style="{ marginLeft: Math.min(comment._depth * 32, 240) + 'px' }" class="d-flex gap-2">
-                                    <!-- Depth indicator line -->
-                                    <div v-if="comment._depth > 0" class="border-start border-secondary" style="width:3px; flex-shrink:0; border-radius:2px"></div>
-
-                                    <div class="flex-grow-1">
-                                        <!-- Bubble -->
-                                        <div class="bg-secondary rounded p-2 px-3">
-                                            <div class="d-flex align-items-center gap-2 mb-1">
-                                                <div class="avatar-sm" style="width:26px;height:26px;font-size:0.7rem;flex-shrink:0">{{ comment.user?.name?.charAt(0).toUpperCase() }}</div>
-                                                <span class="fw-bold small">{{ comment.user?.name }}</span>
-                                                <span v-if="comment._depth > 0" class="text-muted small">
-                                                    <i class="fas fa-reply fa-xs"></i>
-                                                </span>
-                                            </div>
-                                            <p class="mb-0 small" style="white-space:pre-wrap; padding-left: 34px;">{{ comment.body }}</p>
-                                        </div>
-
-                                        <!-- Actions -->
-                                        <div class="d-flex align-items-center gap-3 mt-1 ms-1">
-                                            <span class="text-muted" style="font-size:0.72rem">{{ formatDate(comment.created_at) }}</span>
-                                            <button @click="toggleCommentLike(comment)" class="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-1" :class="comment.user_liked ? 'text-danger' : 'text-muted'" style="font-size:0.72rem">
-                                                <i :class="comment.user_liked ? 'fas fa-heart' : 'far fa-heart'"></i>
-                                                <span>{{ comment.likes_count || 0 }}</span>
-                                            </button>
-                                            <button @click="toggleReplyBox(comment.id)" class="btn btn-link p-0 text-muted text-decoration-none" style="font-size:0.72rem">
-                                                <i class="fas fa-reply fa-xs me-1"></i>Responder
-                                            </button>
-                                        </div>
-
-                                        <!-- Inline reply box -->
-                                        <div v-if="activeReplyId === comment.id" class="mt-2 d-flex gap-2">
-                                            <textarea
-                                                v-model="replyTexts[comment.id]"
-                                                @keydown.enter.ctrl="submitComment(comment.id)"
-                                                class="form-control form-control-sm bg-secondary text-light border-secondary"
-                                                :placeholder="'Respondiendo a ' + (comment.user?.name || '...') + '...' "
-                                                rows="2"
-                                                style="resize:none"
-                                            ></textarea>
-                                            <div class="d-flex flex-column gap-1">
-                                                <button @click="submitComment(comment.id)" :disabled="submittingComment || !replyTexts[comment.id]?.trim()" class="btn btn-primary btn-sm px-2">
-                                                    <i v-if="submittingComment" class="fas fa-spinner fa-spin"></i>
-                                                    <i v-else class="fas fa-paper-plane"></i>
-                                                </button>
-                                                <button @click="toggleReplyBox(comment.id)" class="btn btn-sm btn-secondary px-2">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Transition>
-    </Teleport>
 
     <!-- Collection Detail Modal -->
     <Teleport to="body">

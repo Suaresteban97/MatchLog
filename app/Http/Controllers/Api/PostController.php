@@ -38,6 +38,23 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
+    public function show(Request $request, Post $post)
+    {
+        $post->load([
+            'user.socialProfiles.socialPlatform',
+            'game',
+            'collection',
+            'gameSession.host',
+            'gameSession.participants',
+            'userDevice.device',
+            'userDevice.characteristics'
+        ])->loadCount(['likes', 'comments']);
+
+        $post->user_liked = $post->likes()->where('user_id', $request->user()->id)->exists();
+
+        return response()->json($post);
+    }
+
     public function store(StorePostRequest $request)
     {
         $validated = $request->validated();

@@ -7,6 +7,7 @@ import { useNotifications } from '../Composables/useNotifications';
 import FriendsPanel from '../Pages/Frontend/Components/Social/FriendsPanel.vue';
 import GlobalChatWidget from '../Pages/Frontend/Components/Social/GlobalChatWidget.vue';
 import NotificationPanel from '../Pages/Frontend/Components/NotificationPanel.vue';
+import PostDetailModal from '../Pages/Frontend/Components/PostDetailModal.vue';
 
 const { post } = useApi();
 const { initGlobalEcho } = useChat();
@@ -109,5 +110,6 @@ const logout = async () => {
         </main>
         <!-- Global Chat Widget (Floating) -->
         <GlobalChatWidget />
+        <PostDetailModal />
     </div>
 </template>

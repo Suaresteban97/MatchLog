@@ -79,7 +79,7 @@ class NotificationService
     public function getForUser(int $userId, int $perPage = 20)
     {
         return Notification::forUser($userId)
-            ->with('sender:id,name,email')
+            ->with(['sender:id,name,email', 'notifiable'])
             ->latest()
             ->paginate($perPage);
     }

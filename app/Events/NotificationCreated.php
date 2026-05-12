@@ -48,6 +48,7 @@ class NotificationCreated implements ShouldBroadcastNow
             ] : null,
             'notifiable_type' => $this->notification->notifiable_type,
             'notifiable_id'   => $this->notification->notifiable_id,
+            'notifiable'      => $this->notification->notifiable,
             'read_at'    => $this->notification->read_at,
             'created_at' => $this->notification->created_at->toIso8601String(),
         ];
