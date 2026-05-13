@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Frontend\RenderController;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -15,6 +16,28 @@ class ProfileController extends Controller
     {
         return \Inertia\Inertia::render('Frontend/ProfileForm', [
             'module' => 3 // Profile module code
+        ]);
+    }
+
+    /**
+     * Show public profile
+     */
+    public function show(User $user)
+    {
+        $user->load([
+            'posts' => function ($query) {
+                $query->with('user')->latest();
+            },
+            'games',
+            'sessionsHosting',
+            'sessionsParticipating',
+            'collections',
+            'socialProfiles',
+            'devices'
+        ]);
+
+        return \Inertia\Inertia::render('Frontend/Profile/Show', [
+            'userProfile' => $user
         ]);
     }
 }

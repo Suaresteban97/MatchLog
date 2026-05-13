@@ -90,15 +90,18 @@ const logout = async () => {
                         </li>
                     </ul>
                     <div class="d-flex align-items-center gap-3">
-                        <NotificationPanel />
-                        <FriendsPanel />
+                        <template v-if="$page.props.auth?.user">
+                            <NotificationPanel />
+                            <FriendsPanel />
+                        </template>
 
                         <!-- Theme Toggle Button -->
                         <button @click="toggleTheme" class="btn btn-sm btn-outline-secondary border-0" :title="isVintage ? 'Volver a Cyberpunk' : 'Modo Vintage (Clásico)'">
                             <i :class="isVintage ? 'fas fa-desktop' : 'fas fa-book-open'" style="font-size: 1.2rem;"></i>
                         </button>
                         
-                        <button @click="logout" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
+                        <button v-if="$page.props.auth?.user" @click="logout" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
+                        <Link v-else href="/login" class="btn btn-outline-primary btn-sm">Iniciar Sesión</Link>
                     </div>
                 </div>
             </div>
