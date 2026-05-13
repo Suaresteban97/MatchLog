@@ -18,6 +18,9 @@ Route::get('/', function () {
     return redirect()->route('loginView');
 });
 
+// Public Profile Route
+Route::get('/user/{user:name}', [ProfileController::class, 'show'])->name('profile.show');
+
 Route::middleware(['web.auth'])->group(function () {
     /**
      * Protected Frontend Routes

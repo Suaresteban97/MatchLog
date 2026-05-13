@@ -254,7 +254,9 @@ const toggleLike = async (post) => {
                                     {{ post.user.name.charAt(0).toUpperCase() }}
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 fw-bold">{{ post.user.name }}</h6>
+                                    <h6 class="mb-0 fw-bold">
+                                        <a :href="'/user/' + post.user.name" class="text-light text-decoration-none hover-text-primary">{{ post.user.name }}</a>
+                                    </h6>
                                     <small class="text-muted">{{ formatDate(post.created_at) }}</small>
                                 </div>
                             </div>

@@ -40,7 +40,7 @@ services:
       - .:/var/www/html
     ports:
       - "5173:5173"
-    command: sh -c "npm install -g pnpm@^11.0.0 && pnpm install && pnpm run dev"
+    command: sh -c "npm install -g pnpm@^11.0.0 && pnpm config set ignore-scripts false && pnpm install && pnpm run dev"
     networks:
       - backlog-network
 
