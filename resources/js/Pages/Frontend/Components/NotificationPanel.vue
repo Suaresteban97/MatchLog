@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useNotifications } from '../../../Composables/useNotifications';
+import { usePostModal } from '../../../Composables/usePostModal';
 
 const {
     state,
@@ -13,6 +14,8 @@ const {
     loadMore,
     hasMore,
 } = useNotifications();
+
+const { openPostModal } = usePostModal();
 
 const panelRef = ref(null);
 
@@ -69,6 +72,21 @@ const timeAgo = (dateStr) => {
 const handleNotificationClick = (notification) => {
     if (!notification.read_at) {
         markAsRead(notification.id);
+    }
+    
+    const postTypes = ['post_like', 'post_comment', 'comment_like', 'comment_reply'];
+    if (postTypes.includes(notification.type) && notification.notifiable_type) {
+        let postId = null;
+        if (notification.notifiable_type.includes('PostComment')) {
+            postId = notification.notifiable?.post_id;
+        } else if (notification.notifiable_type.includes('Post')) {
+            postId = notification.notifiable_id;
+        }
+        
+        if (postId) {
+            openPostModal(postId);
+            closePanel();
+        }
     }
 };
 </script>
