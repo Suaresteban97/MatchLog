@@ -7,6 +7,9 @@
 /npm-debug.log
 /yarn-error.log
 /pnpm-debug.log
+/.pnpm-store
+/package-lock.json
+/yarn.lock
 
 # Laravel Specific
 /.env*

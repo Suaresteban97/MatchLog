@@ -33,14 +33,14 @@ services:
 
   # Node para Vite (Compilación de Vue/Inertia en desarrollo)
   node:
-    image: node:20-alpine
+    image: node:22-alpine
     container_name: backlog-node
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
     ports:
       - "5173:5173"
-    command: npm run dev
+    command: sh -c "npm install -g pnpm@^11.0.0 && pnpm install && pnpm run dev"
     networks:
       - backlog-network
 
