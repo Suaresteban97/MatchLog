@@ -1,12 +1,28 @@
 <script setup>
 import { useProfile } from '../../../Composables/useProfile';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const {
     profile, isLoading, isSaving,
     error, successMessage,
     loadProfile, updateProfile
 } = useProfile();
+
+const page = usePage();
+const authUser = page.props.auth?.user;
+
+const copied = ref(false);
+const copyPublicProfileLink = () => {
+    if (!authUser?.name) return;
+    const url = `${window.location.origin}/user/${authUser.name}`;
+    navigator.clipboard.writeText(url).then(() => {
+        copied.value = true;
+        setTimeout(() => {
+            copied.value = false;
+        }, 2000);
+    });
+};
 
 onMounted(async () => {
     await loadProfile();
@@ -15,8 +31,16 @@ onMounted(async () => {
 
 <template>
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center text-white">
+        <div class="card-header d-flex justify-content-between align-items-center text-white flex-wrap gap-2">
             <span><i class="fas fa-cog me-2"></i>Configuración del Perfil</span>
+            <div v-if="authUser" class="d-flex align-items-center gap-2">
+                <a :href="`/user/${authUser.name}`" class="btn btn-outline-info rounded-pill px-3 fw-bold btn-sm shadow-sm" target="_blank">
+                    <i class="fas fa-user me-1"></i>Mi Perfil Público
+                </a>
+                <button type="button" @click="copyPublicProfileLink" class="btn btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" :title="copied ? '¡Copiado!' : 'Copiar Enlace Público'">
+                    <i class="fas" :class="copied ? 'fa-check text-success' : 'fa-copy'"></i>
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div v-if="successMessage" class="alert alert-success border-success text-success bg-dark mb-4">
