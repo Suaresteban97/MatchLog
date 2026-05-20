@@ -24,6 +24,18 @@ const { myGames, loadMyGames } = useGames();
 const page = usePage();
 const authUser = computed(() => page.props.auth?.user);
 
+const copied = ref(false);
+const copyPublicProfileLink = () => {
+    if (!authUser.value?.name) return;
+    const url = `${window.location.origin}/user/${authUser.value.name}`;
+    navigator.clipboard.writeText(url).then(() => {
+        copied.value = true;
+        setTimeout(() => {
+            copied.value = false;
+        }, 2000);
+    });
+};
+
 // Setup browse filters
 const browseFilters = ref({
     search: '',
@@ -333,8 +345,8 @@ onMounted(() => {
         <div class="row pt-4 g-4">
 
             <!-- ===================== TABS NAVIGATION ===================== -->
-            <div class="col-12">
-                 <ul class="nav nav-pills mb-4 border-bottom border-secondary pb-3 gap-2">
+            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom border-secondary pb-3 mb-4">
+                 <ul class="nav nav-pills gap-2 border-0 mb-0 pb-0">
                      <li class="nav-item">
                          <button class="nav-link border" 
                             :class="activeTab === 'sesiones' ? 'active bg-primary border-primary text-white' : 'bg-dark text-muted border-secondary'" 
@@ -350,6 +362,16 @@ onMounted(() => {
                          </button>
                      </li>
                  </ul>
+
+                 <!-- Mi Perfil button -->
+                 <div v-if="authUser" class="d-flex align-items-center gap-2">
+                     <a :href="`/user/${authUser.name}`" class="btn btn-outline-info rounded-pill px-3 fw-bold btn-sm shadow-sm" target="_blank">
+                         <i class="fas fa-user me-1"></i>Mi Perfil Público
+                     </a>
+                     <button @click="copyPublicProfileLink" class="btn btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" :title="copied ? '¡Copiado!' : 'Copiar Enlace Público'">
+                         <i class="fas" :class="copied ? 'fa-check text-success' : 'fa-copy'"></i>
+                     </button>
+                 </div>
             </div>
 
             <!-- ===================== SESIONES TAB ===================== -->
