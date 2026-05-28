@@ -29,7 +29,7 @@ class ProfileController extends Controller
             'games',
             'sessionsHosting',
             'sessionsParticipating',
-            'collections',
+            'collections.games',
             'socialProfiles.socialPlatform',
             'devices',
         ]);
