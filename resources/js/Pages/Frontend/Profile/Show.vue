@@ -39,6 +39,20 @@ const initialLetter = computed(() => {
 const getGameCover = (game) => {
     return game.cover_image_url || null; // fallback will be handled in template
 };
+
+// Collection Modal State
+const selectedCollection = ref(null);
+const showCollectionModal = ref(false);
+
+const openCollectionModal = (collection) => {
+    selectedCollection.value = collection;
+    showCollectionModal.value = true;
+};
+
+const closeCollectionModal = () => {
+    showCollectionModal.value = false;
+    selectedCollection.value = null;
+};
 </script>
 
 <template>
@@ -169,8 +183,8 @@ const getGameCover = (game) => {
                     <div v-else class="row g-3">
                         <div v-for="game in games" :key="game.id" class="col-xl-3 col-lg-4 col-sm-6">
                             <div class="card bg-black border-0 text-light h-100 shadow-sm game-card-hover overflow-hidden position-relative rounded">
-                                <div class="game-cover-container bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
-                                    <img v-if="getGameCover(game)" :src="getGameCover(game)" :alt="game.name" class="w-100 h-100 object-fit-cover" />
+                                <div class="game-cover-container bg-dark d-flex align-items-center justify-content-center w-100" style="height: 220px;">
+                                    <img v-if="getGameCover(game)" :src="getGameCover(game)" :alt="game.name" class="w-100 h-100" style="object-fit: cover; object-position: top;" />
                                     <i v-else class="fas fa-gamepad fa-3x text-muted opacity-50"></i>
                                 </div>
                                 <!-- Overlay Gradient -->
@@ -192,7 +206,7 @@ const getGameCover = (game) => {
                     
                     <div v-else class="row g-3">
                         <div v-for="collection in collections" :key="collection.id" class="col-md-6">
-                            <div class="card bg-dark border border-secondary text-light h-100 hover-lift shadow-sm">
+                            <div class="card bg-dark border border-secondary text-light h-100 hover-lift shadow-sm" style="cursor: pointer;" @click="openCollectionModal(collection)">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-layer-group me-2 text-success"></i>{{ collection.name }}</h5>
@@ -230,6 +244,32 @@ const getGameCover = (game) => {
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Collection Modal -->
+        <div v-if="showCollectionModal" class="modal-overlay d-flex align-items-center justify-content-center" @click.self="closeCollectionModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 1050;">
+            <div class="modal-container card bg-dark border-secondary shadow-lg" style="max-width: 600px; width: 90%; max-height: 80vh; display: flex; flex-direction: column;">
+                <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="fas fa-layer-group me-2 text-primary"></i>{{ selectedCollection?.name }}</h5>
+                    <button @click="closeCollectionModal" class="btn-close btn-close-white"></button>
+                </div>
+                <div class="card-body text-white overflow-auto">
+                    <p class="text-muted small mb-3">{{ selectedCollection?.description || 'Sin descripción' }}</p>
+                    
+                    <div v-if="selectedCollection?.games && selectedCollection.games.length > 0" class="list-group list-group-flush border-top border-secondary pt-2">
+                        <div v-for="game in selectedCollection.games" :key="game.id" class="list-group-item bg-dark text-white border-secondary d-flex align-items-center px-0">
+                            <img :src="getGameCover(game) || '/images/game-placeholder.jpg'" class="rounded me-3 object-fit-cover" style="width: 40px; height: 50px;" :alt="game.name">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">{{ game.name }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-4 text-muted">
+                        <i class="fas fa-ghost fa-2x mb-2 opacity-50"></i>
+                        <p class="mb-0">Esta colección no tiene juegos.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
