@@ -98,8 +98,11 @@ const formatDate = (dateString) => {
 
 const formatDateOnly = (dateString) => {
     if (!dateString) return 'N/A';
-    const [year, month, day] = dateString.split('-');
-    return new Date(year, month - 1, day).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+    const datePart = dateString.split('T')[0].split(' ')[0];
+    const [year, month, day] = datePart.split('-');
+    const date = new Date(year, month - 1, day);
+    if (isNaN(date.getTime())) return 'Fecha inválida';
+    return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const handleRecentGamesScroll = (e) => {
